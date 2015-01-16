@@ -1,0 +1,38 @@
+{
+	"analysis":{
+		"settings":{
+			"beg_bed":"/rawdata/support_files/BED/startLoci_Ampliseq.bed",
+			"capture_type":"AmpliSeq",
+            "cleanup": false, 
+      		"chromosomes_to_analyze": ["chr1"], 
+			"cds_bed":"/rawdata/support_files/BED/CDSonly.bed",
+			"end_bed":"/rawdata/support_files/BED/endLoci_Ampliseq.bed",
+			"hom_cutoff":".8",
+			"mark_dups": false,
+			"min_amplicon_coverage":"30",
+			"min_base_coverage":"30",
+            "pool_dropout": true, 
+			"priority":"1",
+			"project_bed":"/rawdata/support_files/BED/AmpliSeq-Exome.bed",
+			"qc_merged_bed":"/rawdata/support_files/BED/AmpliSeq-Exome_merged.bed",
+			"qc_unmerged_bed":"/rawdata/support_files/BED/AmpliSeq-Exome_unmerged.bed",
+			"queue":"all.q",
+			"tvc_json":"/rawdata/support_files/parameter_sets/ampliseqexome_germline_highstringency_p1_4.0_20130920_parameters.json",
+			"type":"germline",
+			"wt_cutoff":".2"
+		},
+		"type":"qc_compare"
+	},
+	"emails":[
+		"test123@me.com"
+	],
+	"json_file":"/mnt/Despina/projects/Einstein/E0268/E0268.json",
+	"output_folder":"/mnt/Despina/projects/Einstein/E0268/QC",
+	"project":"Einstein",
+	"runs":[],
+	"sample_name":"E0268",
+	"sample_folder":"/mnt/Despina/projects/Einstein/E0268",
+	"sample_status":"pushed",
+	"sample_type":"germline",
+	"status":"copying"
+}
