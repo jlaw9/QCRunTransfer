@@ -52,7 +52,6 @@ expect $DIRNAME/scripts/pscp_connection.sh $PLUGINCONFIG__USER_PASSWORD $PLUGINC
 rm $TSP_FILEPATH_PLUGIN_DIR/temp.txt
 
 #build call to the driver.pl script which will take care of the rest
-#run "perl ${DIRNAME}/scripts/driver.pl";
-run "python ${DIRNAME}/scripts/driver.py";
+run "perl ${DIRNAME}/scripts/driver.pl";
 
 

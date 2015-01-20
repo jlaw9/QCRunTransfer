@@ -1,5 +1,0 @@
-mkdir test
-mkdir test/test
-mkdir test/test/test
-cd test/test/test
-put test.txt
