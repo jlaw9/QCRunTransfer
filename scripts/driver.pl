@@ -5,12 +5,12 @@ use strict;
 
 #grab some key variables
 my $PROTOCOL = $ENV{"PLUGINCONFIG__PROTOCOL"} || "FTP";
-my $RESULTS_DIR = $ENV{"RUNINFO__REPORT_ROOT_DIR"};
+my $REPORT_ROOT_DIR = $ENV{"RUNINFO__REPORT_ROOT_DIR"}; # (i.e. /results/analysis/output/Home/Reanalsys_PNET_BC373_Run4_1342)
 my $RAW_DATA_DIR = $ENV{"RUNINFO__RAW_DATA_DIR"};
-my $OUTPUT_DIR = $ENV{"TSP_FILEPATH_PLUGIN_DIR"};
+my $OUTPUT_DIR = $ENV{"TSP_FILEPATH_PLUGIN_DIR"}; # (i.e. /results/analysis/output/Home/Reanalsys_PNET_BC373_Run4_1342/plugin_out/QCRunTransfer_out.2921)
 my $PLUGINNAME = $ENV{"PLUGINNAME"};
 my $PRIMARY_BAM = $ENV{"TSP_FILEPATH_BAM"};
-my $PLUGIN_PATH = $ENV{"DIRNAME"};
+my $PLUGIN_PATH = $ENV{"PLUGIN_PATH"}; # (i.e. /results/plugins/QCRunTransfer)
 my $SERVER_IP = $ENV{"PLUGINCONFIG__IP"};
 my $USER_NAME = $ENV{"PLUGINCONFIG__USER_NAME"};
 my $USER_PASSWORD = $ENV{"PLUGINCONFIG__USER_PASSWORD"};
@@ -92,11 +92,11 @@ my $FILES = {};
 	$FILES = &addFile($bamFile.".bai", $upload_bam_path.".bai", $FILES);
 	# starting with 4.2 coverage analysis plugin output folder gets a number assigned so taht users can run multiple times without over-writing the previous coverage analysis plugin result 
 	# example: coverageAnalysis_out.2369. if there are multiple cov results, hopefully they were run with the same BED file! find will get the first instance
-	$FILES = &find_and_add_file("$RESULTS_DIR/plugin_out/coverageAnalysis_out*/*.amplicon.cov.xls", $run_dir, $FILES);
+	$FILES = &find_and_add_file("$REPORT_ROOT_DIR/plugin_out/coverageAnalysis_out*/*.amplicon.cov.xls", $run_dir, $FILES);
 	# check to see if there is a vcf file to push as well. If not, cov or TVC will be run on the analysis server.
-	$FILES = &find_and_add_file("$RESULTS_DIR/plugin_out/variantCaller_out*/TSVC_variants.vcf", $run_dir, $FILES);
+	$FILES = &find_and_add_file("$REPORT_ROOT_DIR/plugin_out/variantCaller_out*/TSVC_variants.vcf", $run_dir, $FILES);
 	# push the report.pdf as well
-	$FILES = &find_and_add_file("$RESULTS_DIR/report.pdf", $run_dir, $FILES);
+	$FILES = &find_and_add_file("$REPORT_ROOT_DIR/report.pdf", $run_dir, $FILES);
 
     #create the report and start uploading
     foreach my $file (sort {$a cmp $b} keys %{$FILES}){
@@ -126,7 +126,7 @@ my $FILES = {};
 #	    #skip if not more than one token since not likely a barcode entry
 #	    if(scalar @tokens > 1){
 #		my $barcodeName = $tokens[1];
-#		my $bamFile = $RESULTS_DIR . "/" . $barcodeName . "_" . $bamFile;
+#		my $bamFile = $REPORT_ROOT_DIR . "/" . $barcodeName . "_" . $bamFile;
 #
 #		#see if the file exists since barcode file shows all barcodes in the set whether used or not
 #		if( -e $bamFile){
@@ -156,7 +156,7 @@ sub getBam{
 	if($BARCODE ne ""){
 
 		# now add the barcode
-		$bamFile = $RESULTS_DIR . "/" . $BARCODE . "_" . $bamFileName;
+		$bamFile = $REPORT_ROOT_DIR . "/" . $BARCODE . "_" . $bamFileName;
 
 		#see if the file exists since barcode file shows all barcodes in the set whether used or not
 		if( -e $bamFile){
@@ -253,7 +253,7 @@ sub pushSampleJson{
 	if(length($result) == 0){
 		# doesn't exist, so push the sample's JSON file. 
 		# the sample JSON file already has the current run in this sample's list of runs.
-		my $sample_json = "$RESULTS_DIR/$SAMPLE_NAME.json";
+		my $sample_json = "$OUTPUT_DIR/$SAMPLE_NAME.json";
 		$FILES = &addFile($sample_json, "$SAMPLE_DIR/$SAMPLE_NAME.json", $FILES);
 	    my $pushExitStatus = &push($sample_json, $ERRORS, $FILES);
 		if($pushExitStatus ne 0){

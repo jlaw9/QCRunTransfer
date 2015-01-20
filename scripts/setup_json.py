@@ -20,9 +20,10 @@ PGM_BACKUP_PATH="/media/Backup_02/archivedReports"
 class Setup_Json:
 	def __init__(self, plugin_settings, options):
 		self.plugin_settings = plugin_settings
-		self.plugin_path = plugin_settings['plugin_dir']
+	# RESULTS_DIR is the path to the run's plugin dir (i.e. /results/analysis/output/Home/Reanalsys_PNET_BC373_Run4_1342/plugin_out/QCRunTransfer_out.2921)
+		self.output_dir = os.environ['TSP_FILEPATH_PLUGIN_DIR']
 		self.options = options
-		self.ex_json = json.load(open('%s/scripts/%s.json'%(self.plugin_path, plugin_settings['project'])))
+		self.ex_json = json.load(open('%s/scripts/%s.json'%(os.environ['PLUGIN_PATH'], plugin_settings['project'])))
 
 	# @param run the line of the CSV 
 	def setup_json(self):
@@ -96,11 +97,11 @@ class Setup_Json:
 	
 		# apparently this script does not have permission to the plugin. Write the JSON files to plugin files of the run.
 		## make sure hte JsonFiles directory exists
-		#if not os.path.isdir("%s/scripts/Json_Files"%self.plugin_path):
-		#	os.mkdir("%s/scripts/Json_Files"%self.plugin_path)
+		#if not os.path.isdir("%s/scripts/Json_Files"%self.output_dir):
+		#	os.mkdir("%s/scripts/Json_Files"%self.output_dir)
 
 		# dump the json file
-		with open("%s/%s"%(self.plugin_path, json_name), 'w') as out:
+		with open("%s/%s"%(self.output_dir, json_name), 'w') as out:
 			json.dump(jsonData, out, sort_keys=True, indent = 2)
 	
 		return run_path, run_json
@@ -125,7 +126,7 @@ class Setup_Json:
 			self.ex_json["ffpe"] = True
 	
 		# dump the json file
-		with open("%s/%s.json"%(self.plugin_path, sample), 'w') as out:
+		with open("%s/%s.json"%(self.output_dir, sample), 'w') as out:
 			json.dump(self.ex_json, out, sort_keys=True, indent = 2)
 
 		# this path will be used to check if the sample's json exists on the server already
@@ -159,11 +160,9 @@ if __name__ == '__main__':
 	if 'RESULTS_DIR' not in os.environ:
 		print "Error: This script is to be called from driver.pl"
 		sys.exit(1)
-	plugin_settings = json.load(open(os.environ['RESULTS_DIR'] + '/startplugin.json'))
+	plugin_settings = json.load(open(os.environ['TSP_FILEPATH_PLUGIN_DIR'] + '/startplugin.json'))
 	plugin_settings['pluginconfig']['browser_runID'] = plugin_settings['runinfo']['pk']
 	plugin_settings = plugin_settings['pluginconfig']
-	# RESULTS_DIR is the path to the run's plugin dir (i.e. /results/analysis/output/Home/Reanalsys_PNET_BC373_Run4_1342/plugin_out/QCRunTransfer_out.2921)
-	plugin_settings['plugin_dir'] = os.environ['RESULTS_DIR']
 
 	setup = Setup_Json(plugin_settings, options)
 	run_path, run_json = setup.setup_json()
