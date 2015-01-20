@@ -57,6 +57,11 @@ class Setup_Json:
 		# for example: Auto_user_PLU-2_2 vs Auto_user_PLU-3-Ion
 		run_id_num = orig_path.split("Auto_user_")[1].split("-")[1].split("-")[0].split("_")[0]
 		proton = orig_path.split("Auto_user_")[1].split("-")[0]
+		run_id = "%s-%s"%(proton, run_id_num)
+		#There are runs (such as a reanalysis) which don't have the common 'PLU-231' format (i.e. Reanalysis_PNET_BC373_Run4). 
+		# We don't use the runID for anything besides to fill in the QC table. I could just leave the entire name in these cases.
+		if len(proton) < 3:
+			run_id = orig_path.split("/")[-1]
 	
 		# Write the run's json file which will be used mainly to hold metrics.
 		jsonData = {
@@ -67,7 +72,7 @@ class Setup_Json:
 			"json_type": "run",
 			"orig_path": orig_path,
 			"run_folder": run_path, 
-			"run_id": "%s-%s"%(proton, run_id_num),
+			"run_id": run_id,
 			"run_name": runName, 
 			"run_num": runNum, 
 			"run_type": runType, 

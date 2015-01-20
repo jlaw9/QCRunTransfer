@@ -37,14 +37,15 @@ run ()
 # remove some files if they are there
 run "rm -rf ${TSP_FILEPATH_PLUGIN_DIR}/*.html";
 
+# if the known_hosts file is deleted, then sshpass won't work!
 #clean up old keys just in case user has brought down the vm and then spun it up again and want to avoid ssh warning
-if [ -e ~/.ssh/known_hosts ]; then
-    rm ~/.ssh/known_hosts
-fi
+#if [ -e ~/.ssh/known_hosts ]; then
+#    rm ~/.ssh/known_hosts
+#fi
 
-if [ -e ~/.putty/sshhostkeys ]; then
-    rm ~/.putty/sshhostkeys
-fi
+#if [ -e ~/.putty/sshhostkeys ]; then
+#    rm ~/.putty/sshhostkeys
+#fi
 
 #create connection to generated ssh entry
 expect $DIRNAME/scripts/ssh_connection.sh $PLUGINCONFIG__USER_NAME $PLUGINCONFIG__IP
