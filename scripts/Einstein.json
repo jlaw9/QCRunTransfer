@@ -27,7 +27,7 @@
 		"test123@me.com"
 	],
 	"json_file":"/mnt/Despina/projects/Einstein/E0268/E0268.json",
-	"output_folder":"/mnt/Despina/projects/Einstein/E0268/QC",
+	"qc_folder":"/mnt/Despina/projects/Einstein/E0268/QC",
 	"project":"Einstein",
 	"runs":[],
 	"sample_name":"E0268",

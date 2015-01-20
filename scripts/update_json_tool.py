@@ -72,12 +72,13 @@ if __name__ == "__main__":
 	parser = OptionParser()
 
 	parser.add_option('-j', '--json', dest='json', help="The name of the .json file to add info to.")
+	parser.add_option('-s', '--server', dest='server', help="server where the sample's json file is located")
+	parser.add_option('-u', '--user_password', dest='user_password', help="The password to the server")
 	parser.add_option('-k', '--json_key_value', dest='json_key_value', action="append", help="Any number of key:value pairs can be used to filter json files found")
 	parser.add_option('-m', '--metric', dest='metrics', action="append", help="info to add to a json file. string is loaded into json so must use JSON format. (See push_Data.sh for an example)")
 	parser.add_option('-e', '--ex_json', dest='ex_json', help="The json file(s) and the exapmle_json file will be intersected")
 	parser.add_option('-a', '--add_run_to_sample', dest='add_run', action="store_true", help="the run's json file has the path to it's sample's json file. It will copy the sample's json file from the other server and add the run to it.")
 	parser.add_option('-p', '--push_sample_json', dest='push_sample_json', action="store_true", help="push the sample's json file to the server because it hasn't been copied yet.")
-	parser.add_option('-s', '--server', dest='server', help="server where the sample's json file is located")
 	parser.add_option('-S', '--sample_dirs', dest='sample_dirs', action="append", help="will recursively look in the sample directories specified, find all of the json files matching what is passed in by the --json option and update them")
 	parser.add_option('-d', '--debug', dest='debug', action="store_true", help="add more print statements")
 
@@ -114,12 +115,14 @@ if __name__ == "__main__":
 		sample_json_name = runJsonData["sample_json"].split("/")[-1]
 
 		# copy the sample's json file here and check if the copy was successful
-		copy_command = "scp %s:%s Json_Files/"%(options.server, runJsonData["sample_json"])
+		copy_command = "pscp -pw %s %s:%s Json_Files/"%(options.user_password, options.server, runJsonData["sample_json"])
 		if runCommandLine(copy_command) == 0:
 			sampleJsonData = json.load(open("Json_Files/"+sample_json_name))
 
 			# append the current run to this sample's list of runs.
 			sampleJsonData['runs'].append(runJsonData['json_file'])
+			# make the list of runs into a set and then list again to delete any run duplicates
+			sampleJsonData['runs'] = list(set(sampleJsonData['runs']))
 			
 			# set the status to 'pending' so that the runs will be QCd together.
 			sampleJsonData['status'] = 'pending'
@@ -132,7 +135,7 @@ if __name__ == "__main__":
 				json.dump(sampleJsonData, out, sort_keys=True, indent = 2)
 
 			# copy the edited sample's json file back to the server
-			copy_command = "scp Json_Files/%s %s:%s "%(sample_json_name, options.server, runJsonData["sample_json"])
+			copy_command = "pscp -pw %s Json_Files/%s %s:%s "%(options.user_password, sample_json_name, options.server, runJsonData["sample_json"])
 			if runCommandLine(copy_command)	== 0:
 				print "Added a run to %s, and pushed successfully."%sample_json_name
 		else:

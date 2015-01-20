@@ -1,5 +1,5 @@
 #!/usr/lib/perl -w
-# copy some BAM files now
+# copy some BAM FILES now
 
 use strict;
 
@@ -7,52 +7,106 @@ use strict;
 my $PROTOCOL = $ENV{"PLUGINCONFIG__PROTOCOL"} || "FTP";
 my $RESULTS_DIR = $ENV{"RUNINFO__REPORT_ROOT_DIR"};
 my $RAW_DATA_DIR = $ENV{"RUNINFO__RAW_DATA_DIR"};
-my $SERVER_IP = $ENV{"PLUGINCONFIG__IP"};
-my $USER_NAME = $ENV{"PLUGINCONFIG__USER_NAME"};
-my $USER_PASSWORD = $ENV{"PLUGINCONFIG__USER_PASSWORD"};
-my $UPLOAD_DIR = $ENV{"PLUGINCONFIG__UPLOAD_PATH"} . "/" . $ENV{"TSP_ANALYSIS_NAME"} . "/";
-my $SAMPLE = $ENV{"PLUGINCONFIG__SAMPLE"};
-my $RUN = $ENV{"PLUGINCONFIG__RUN"};
-my $PROJECT = $ENV{"PLUGINCONFIG__PROJECT"};
 my $OUTPUT_DIR = $ENV{"TSP_FILEPATH_PLUGIN_DIR"};
 my $PLUGINNAME = $ENV{"PLUGINNAME"};
 my $PRIMARY_BAM = $ENV{"TSP_FILEPATH_BAM"};
 my $PLUGIN_PATH = $ENV{"DIRNAME"};
-#my $MIN_READS = $ENV{"PLUGINCONFIG__MIN_READS"};
+my $SERVER_IP = $ENV{"PLUGINCONFIG__IP"};
+my $USER_NAME = $ENV{"PLUGINCONFIG__USER_NAME"};
+my $USER_PASSWORD = $ENV{"PLUGINCONFIG__USER_PASSWORD"};
+my $UPLOAD_DIR = $ENV{"PLUGINCONFIG__UPLOAD_PATH"};
+my $SAMPLE_NAME = $ENV{"PLUGINCONFIG__SAMPLE_NAME"};
+my $RUN_NUM = $ENV{"PLUGINCONFIG__RUN_NUM"};
+my $RUN_TYPE = $ENV{"PLUGINCONFIG__RUN_TYPE"};
+my $PROJECT = $ENV{"PLUGINCONFIG__PROJECT"};
+my $BARCODE = $ENV{"PLUGINCONFIG__BARCODE"};
+my $FFPE = $ENV{"PLUGINCONFIG__FFPE"};
+my $SAMPLE_DIR = $UPLOAD_DIR . "/" . $SAMPLE_NAME;
+#my $RUN_DIR = $SAMPLE_NAME_DIR . "/" . $RUN
+
+# make these global as they will be used throughout the entire script
+my $ERRORS = ();
+# we will store info on the FILES we are uploading so we can print status updates as needed
+my $FILES = {};
 
 #force scope
 {
-    #check to make sure we don't have any errors
-    my $errors = ();
+	# small test
+	print "FFPE: $FFPE\n";
+    #check to make sure we don't have any ERRORS
 
     if($SERVER_IP eq ""){
-	push(@{$errors}, "No server name / IP provided");
+		push(@{$ERRORS}, "No server name / IP provided");
     }
 
     if($USER_NAME eq ""){
-	push(@{$errors}, "No user name provided");
+		push(@{$ERRORS}, "No user name provided");
     }
 
     if($USER_PASSWORD eq ""){
-	push(@{$errors}, "No user password provided");
+		push(@{$ERRORS}, "No user password provided");
     }
 
-    if($SAMPLE eq ""){
-	push(@{$errors}, "No sample provided");
+    if($SAMPLE_NAME eq ""){
+		push(@{$ERRORS}, "No sample name provided");
     }
 
-    if($RUN eq ""){
-	push(@{$errors}, "No run provided");
+    if($RUN_NUM eq ""){
+		push(@{$ERRORS}, "No run number provided");
     }
 
-    #we will store info on the files we are uploading so we can print status updates as needed
-    my $files = {};
-
-    #if we have errors let's print the report
-    if(defined($errors) && scalar @{$errors} != 0){
-	&printReport($errors, $files);
-	exit();
+    #if we have ERRORS let's print the report
+    if(defined($ERRORS) && scalar @{$ERRORS} != 0){
+		&printReport($ERRORS, $FILES);
+		exit(1);
     }
+
+	# get the path and name to the bam file we will push. If it's not found, script will exit
+	my ($bamFile, $bamFileName) = &getBam();
+
+	# get the upload path of the run_dir on the server and create the sample and run JSON FILES.
+	my ($run_dir, $run_json) = &createJsonFiles($bamFile, $bamFileName);
+
+    #create the directory where we will stick the data
+    my $returnStatus = &createUploadDir($run_dir);
+
+	# set the path the bam file will be uploaded to on the server we're pushing to
+	my $upload_bam_path = "$run_dir/$bamFileName";
+	# add the bam file to the list of bams to push
+	$FILES = &addFile($bamFile, $upload_bam_path, $FILES);
+
+	# if the bam file pushes successfully, then we know we should push the rest
+	my $pushExitCode = &push($bamFile, $ERRORS, $FILES);
+	if($pushExitCode != 0){
+		# if the bam file didn't push, then don't push any of the other FILES. The report was already printed
+		exit(1);
+	}
+
+	# check to see if the sample JSON needs to be pushed or add this run to the sample JSON file.
+	&pushSampleJson($FILES, $run_json);
+
+    #print the report since we are starting the upload process
+    &printReport($ERRORS, $FILES);
+
+	# add the bam index file to the list of bams to push
+	$FILES = &addFile($bamFile.".bai", $upload_bam_path.".bai", $FILES);
+	# starting with 4.2 coverage analysis plugin output folder gets a number assigned so taht users can run multiple times without over-writing the previous coverage analysis plugin result 
+	# example: coverageAnalysis_out.2369. if there are multiple cov results, hopefully they were run with the same BED file! find will get the first instance
+	$FILES = &find_and_add_file("$RESULTS_DIR/plugin_out/coverageAnalysis_out*/*.amplicon.cov.xls", $run_dir, $FILES);
+	# check to see if there is a vcf file to push as well. If not, cov or TVC will be run on the analysis server.
+	$FILES = &find_and_add_file("$RESULTS_DIR/plugin_out/variantCaller_out*/TSVC_variants.vcf", $run_dir, $FILES);
+	# push the report.pdf as well
+	$FILES = &find_and_add_file("$RESULTS_DIR/report.pdf", $run_dir, $FILES);
+
+    #create the report and start uploading
+    foreach my $file (sort {$a cmp $b} keys %{$FILES}){
+		print "Working on $file\n";
+	    &push($file, $ERRORS, $FILES);
+    }
+
+    #print out final review
+    &printReport($ERRORS, $FILES);
+}
 
 #    #see if this is a barcoded run or not
 #    if( -e $ENV{"TSP_FILEPATH_BARCODE_TXT"}){
@@ -77,8 +131,8 @@ my $PLUGIN_PATH = $ENV{"DIRNAME"};
 #		#see if the file exists since barcode file shows all barcodes in the set whether used or not
 #		if( -e $bamFile){
 #		    print "BAM found for barcode $barcodeName - adding to list\n";
-#		    $files->{$bamFile}->{"status"} = "Pending";
-#		    $files->{$bamFile}->{"notes"} = "";
+#		    $FILES->{$bamFile}->{"status"} = "Pending";
+#		    $FILES->{$bamFile}->{"notes"} = "";
 #		}
 #		else{
 #		    print "No BAM file for barcode $barcodeName at $bamFile - skipping\n";
@@ -89,167 +143,228 @@ my $PLUGIN_PATH = $ENV{"DIRNAME"};
 #	close(IN);
 #    }
 #    else{
-#	print "Not a barcoded run, will push up primary BAM only\n";
-#	$files->{$PRIMARY_BAM}->{"status"} = "Pending";
-#	$files->{$PRIMARY_BAM}->{"notes"} = "";
 #    }
-#
-#    #create the directory where we will stick the data if we are using SSH
-#    if($PROTOCOL eq "SSH"){
-#	&createUploadDir();
-#    }
-#
-#    #print the report since we are starting the upload process
-#    
-#    if(scalar keys %{$files} == 0){
-#	push(@{$errors}, "No valid BAM files found");
-#	&printReport($errors, $files);
-#	exit();
-#    }
-#
-#    &printReport($errors, $files);
-#
-#    #create the report and start uploading
-#    foreach my $file (sort {$a cmp $b} keys %{$files}){
-#	print "Working on $file\n";
-#	$files->{$file}->{"status"} = "Counting Reads";
-#	$files->{$file}->{"notes"} = "";
-#	&printReport($errors, $files);
-#	
-#	#check the number of reads - skip for now because it takes a long time
-#	my $systemCall = "";
-#	#my $systemCall = "samtools view $file | grep -v \"\#\" | wc -l";
-#	#my $numReads = `$systemCall`;
-#	#chomp($numReads);
-#	#print "$numReads reads in $file\n";
-#
-#	#if($numReads < $MIN_READS){
-#	    #print "Skipping because reads less than $MIN_READS\n";
-#	    #$files->{$file}->{"status"} = "Skipped";
-#	    #$files->{$file}->{"notes"} = "Too few reads ($numReads)";
-#	    #&printReport($errors, $files);
-#	    #next;
-#	#}
-#	#else{
-#      	    #upload the file	    
-#	    #&push($file, $errors, $files, $numReads);
-#	    &push($file, $errors, $files);
-#	#}
-#    }
-#
-#    #print out final review
-#    &printReport($errors, $files);
-}
 
 1;
 
+# gets the proper bam file and path
+sub getBam{
+	#grab the primary mapped BAM file root name
+	my $bamFile = $PRIMARY_BAM;
+	my @tokens = split(/\//, $PRIMARY_BAM);
+	my $bamFileName = $tokens[scalar @tokens - 1];
+	if($BARCODE ne ""){
+
+		# now add the barcode
+		$bamFile = $RESULTS_DIR . "/" . $BARCODE . "_" . $bamFileName;
+
+		#see if the file exists since barcode file shows all barcodes in the set whether used or not
+		if( -e $bamFile){
+			print "Will push the bam file of barcde: " . $BARCODE . "\n";
+		}
+		else{
+			# there is an error, print the report and exit
+			push(@{$ERRORS}, "No BAM file for barcode $BARCODE at $bamFile - quitting");
+			&printReport($ERRORS, $FILES);
+			exit(1);
+		}
+	}
+	else{
+		print "Will push up primary BAM\n";
+	}
+	return ($bamFile, $bamFileName);
+}
+
+# add a file to the $FILES dictionary
+sub addFile{
+	my ($file, $upload_path, $FILES) = @_;
+	$FILES->{$file}->{"upload_path"} = $upload_path;
+	$FILES->{$file}->{"status"} = "Pending";
+	$FILES->{$file}->{"notes"} = "";
+	return $FILES;
+}
+
+# if a file exists, add it to the list of FILES to push
+sub find_and_add_file{
+	my ($file, $run_dir, $FILES) = @_;
+
+	# if the file is found, then add it to the list of FILES to push.
+	my $systemCall="find $file -maxdepth 0 2>/dev/null | head -n 1";
+	my $filePath = `$systemCall`;
+	chomp($filePath);
+	if(length($filePath) != 0){
+		my @tokens = split(/\//, $filePath);
+		my $fileName = $tokens[scalar @tokens - 1];
+		# add the amplicon.cov.xls file to the list of FILES to be pushed.
+		$FILES = &addFile($filePath, "$run_dir/$fileName", $FILES);
+	}
+	return $FILES;
+}
+
+# create the Sample and Run JSON FILES to be pushed
+sub createJsonFiles{
+	my ($bamFile, $bamFileName) = @_;
+
+	# get the ip address of the current server.
+	my $systemCall = q(ifconfig | grep 'inet addr:' | grep -v "127.0.0.1" | cut -d: -f2 | head -n 1 | awk '{print $1}');
+	my $local_ip = `$systemCall`;
+	chomp($local_ip);
+	my $TS_version = "not_found";
+#	# TODO get the ts_version of this bam file
+#    if( -e $ENV{"TSP_FILEPATH_BARCODE_TXT"}){
+#		my $TS_version=`grep -oE \"version.*\" $1 -m 1 2>/dev/null | grep -oe "[0-9]\.[0-9]" | perl -ne "chomp and print"`
+#		if [ "$TS_version" == "" ]; then
+#			TS_version=`grep -oE "Torrent_Suite=.*" $1 -m 1 2>/dev/null | grep -oe "[0-9]\.[0-9]" | perl -ne "chomp and print"`
+#		else
+#			TS_version="not_found"
+#
+    $systemCall = "python setup_json.py --local_ip $local_ip --bam $bamFile --ts_version $TS_version";
+    my $results = `$systemCall`;
+    my @tokens = split(/\,/, $results);
+    my $run_dir = $tokens[0];
+    my $run_json = $tokens[1];
+	chomp($run_dir);
+    chomp($run_json);
+	return ($run_dir, $run_json);
+}
+
 #create the directory to upload
 sub createUploadDir{
+	my ($upload_dir) = @_;
     #create the directory
-    my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"mkdir -p $UPLOAD_DIR\"";
-    system($systemCall);
+    my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"mkdir -p $upload_dir\"";
+    my $returnStatus = system($systemCall);
+	if($returnStatus ne 0){
+		push(@{$ERRORS}, "Unable to create the run_dir on the server over SSH. Check the username, password, and ip. Quitting.");
+		&printReport($ERRORS, $FILES);
+		exit(1);
+    }
 }
+
+# check to push the sampleJSON
+sub pushSampleJson{
+    my ($FILES, $run_json) = @_;
+	# Check to see if this sample's JSON file already exists
+	# Check this first to avoid conflict with other runs of this sample that are also being pushed.
+    my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"stat $SAMPLE_DIR/$SAMPLE_NAME.json 2>/dev/null\"";
+	my $result = `$systemCall`;
+	if(length($result) == 0){
+		# doesn't exist, so push the sample's JSON file. 
+		my $sample_json = "Json_Files/$SAMPLE_NAME.json";
+		$FILES = &addFile($sample_json, "$SAMPLE_DIR/$SAMPLE_NAME.json", $FILES);
+	    my $pushExitStatus = &push($sample_json, $ERRORS, $FILES);
+		if($pushExitStatus ne 0){
+			# The sample json is needed in order to run any analysis so if pushing the sample json fails, quit.
+			exit(1);
+		}
+	}
+	# copy the sample_json file from the other server, add this run to it and recopy it back over.
+	$systemCall = "python update_json_tool.py --user_password $USER_PASSWORD --json $run_json --add_run_to_sample --server $USER_NAME\@$SERVER_IP";
+	my $returnStatus = system($systemCall);
+	if($returnStatus ne 0){
+		push(@{$ERRORS}, "Unable to add the run to the sample's JSON file located on the analysis server.");
+		&printReport($ERRORS, $FILES);
+		# if this run is not added to the list of runs, then it will not be considered in the analysis.
+		exit(1);
+	}
+}
+
 
 #push a file over
 sub push{
-    #my ($file, $errors, $files, $numReads) = @_;
-    my ($file, $errors, $files) = @_;
+    my ($file, $ERRORS, $FILES) = @_;
 
-    my $size = `ls -lh $file`;
-    my @tokens = split(/\s+/, $size);
-    $size = $tokens[4];
-    chomp($size);
+	# upload path:
+	my $upload_path = $FILES->{$file}->{"upload_path"};
 
-    my $date = `date`;
-    chomp($date);
-    $files->{$file}->{"status"} = "Uploading";
-    #$files->{$file}->{"notes"} = "Started: $date<br>Size: $size Reads: $numReads";
-    $files->{$file}->{"notes"} = "Started: $date<br>Size: $size";
-    &printReport($errors, $files);
+	# set the pushExitCode to 0 for if the file has already been uploaded
+	my $pushExitCode = 0;
+	my $date = `date`;
+	chomp($date);
 
-    #see if we should use scp or ftp
-    my $systemCall = "pscp -pw $USER_PASSWORD $file $USER_NAME\@$SERVER_IP\:$UPLOAD_DIR/";
+	# if this file has already been pushed, then don't do anything
+	if($FILES->{$file}->{"status"} eq "Pending"){
+		# check the md5sum before copying to see if the file has already been copyied before. Bam file takes about 1min 30sec
+		my ($md5sum, $remoteMD5sum) = &check_md5sum($file, $upload_path);
+		if($md5sum eq $remoteMD5sum){
+			$FILES->{$file}->{"status"} = "Already Uploaded";
+			$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"green\">MD5s Match: $md5sum</font>";
+			&printReport($ERRORS, $FILES);
+		}
+		else{
+			my $size = `ls -lh $file`;
+			my @tokens = split(/\s+/, $size);
+			$size = $tokens[4];
+			chomp($size);
 
-    if($PROTOCOL eq "FTP"){
-	#write the batch file
-	open(OUT, ">$OUTPUT_DIR/sftp.batch") || die "Could not write $OUTPUT_DIR/sftp.batch\n";
+			$FILES->{$file}->{"status"} = "Uploading";
+			#$FILES->{$file}->{"notes"} = "Started: $date<br>Size: $size Reads: $numReads";
+			$FILES->{$file}->{"notes"} = "Started: $date<br>Size: $size";
+			&printReport($ERRORS, $FILES);
 
-	#need to recursively add directories
-	my @tokens = split(/\//, $UPLOAD_DIR);
-	my $path = "";
+			# push the file
+			my $systemCall = "pscp -pw $USER_PASSWORD $file $USER_NAME\@$SERVER_IP\:$upload_path";
+			#print "$systemCall\n";
+			$pushExitCode = system($systemCall);
 
-	foreach my $token(@tokens){
-	    if($token eq ""){
-		next;
-	    }
-
-	    $path .= "$token/";
-	    print OUT "-mkdir $path\n";
+			#set the status
+			$date = `date`;
+			chomp($date);
+		
+			#check the status
+			if($pushExitCode != 0){
+				#push has failed
+				$FILES->{$file}->{"status"} = "<font color=\"red\">Upload Failed</font>";
+				$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br>";
+				push(@{$ERRORS}, "Failed upload on $file");
+				&printReport($ERRORS, $FILES);
+			}
+			else{
+				# check the md5sum to see if the FILES match completely
+				my ($md5sum, $remoteMD5sum) = &check_md5sum($file, $upload_path);
+				if($md5sum eq $remoteMD5sum){
+					$FILES->{$file}->{"status"} = "Upload Complete";
+					$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"green\">MD5s Match: $md5sum</font>";
+					&printReport($ERRORS, $FILES);
+				}
+				else{
+					# something went wrong with the push!
+					$pushExitCode = 1;
+					$FILES->{$file}->{"status"} = "MD5 Mismtach";
+					$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"red\">MD5s Mismatch: $md5sum / $remoteMD5sum</font>";
+					push(@{$ERRORS}, "Mistmatch MD5sum on $file");
+					&printReport($ERRORS, $FILES);
+				}
+			}
+		}
 	}
+	return $pushExitCode;
+}
 
-	#change directories
-	print OUT "cd $UPLOAD_DIR\n";
-
-	#put file
-	print OUT "put $file\n";
-	close(OUT);
-
-	$systemCall = "expect $PLUGIN_PATH/scripts/ftp_file.sh $USER_NAME $SERVER_IP $USER_PASSWORD $OUTPUT_DIR/sftp.batch";
-	print "$systemCall\n";
-    }
-
-    #print "$systemCall\n";
-    my $pushExitCode = system($systemCall);
-
-    #set the status
-    $date = `date`;
-    chomp($date);
-
-
-    #check the status
-    if($pushExitCode != 0){
-	#push has failed
-	    $files->{$file}->{"status"} = "<font color=\"red\">Upload Failed</font>";
-	    $files->{$file}->{"notes"} = $files->{$file}->{"notes"}."<br>Finished: $date<br>";
-	    push(@{$errors}, "Failed upload on $file");
-	    &printReport($errors, $files);
-    }
-    else{
+sub check_md5sum{
+	my ($file, $upload_path) = @_;
 	#push was good, but now lets check teh get md5 if it was ssh
-	if($PROTOCOL eq "SSH"){
-	    $files->{$file}->{"status"} = "Checking MD5s";
-	    my $md5sum = `md5sum $file`;
-	    @tokens = split(/\s+/, $md5sum);
-	    $md5sum = $tokens[0];
-	    chomp($md5sum);
-	
-	    @tokens = split(/\//, $file);
-	
-	    #getremote md5
-	    $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"md5sum $UPLOAD_DIR/" . $tokens[scalar @tokens - 1] . "\"";
-	    my $remoteMD5sum = `$systemCall`;
-	    @tokens = split(/\s+/, $remoteMD5sum);
-	    $remoteMD5sum = $tokens[0];
-	    chomp($remoteMD5sum);
-	    
-	    if($md5sum eq $remoteMD5sum){
-		$files->{$file}->{"status"} = "Upload Complete";
-		$files->{$file}->{"notes"} = $files->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"green\">MD5s Match: $md5sum</font>";
-		&printReport($errors, $files);
-	    }
-	    else{
-		$files->{$file}->{"status"} = "MD5 Mismtach";
-		$files->{$file}->{"notes"} = $files->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"red\">MD5s Mismatch: $md5sum / $remoteMD5sum</font>";
-		push(@{$errors}, "Mistmatch MD5sum on $file");
-		&printReport($errors, $files);
-	    }
-	}
-    }
+	$FILES->{$file}->{"status"} = "Checking MD5s";
+	my $md5sum = `md5sum $file`;
+	my @tokens = split(/\s+/, $md5sum);
+	$md5sum = $tokens[0];
+	chomp($md5sum);
+
+	@tokens = split(/\//, $file);
+
+	#getremote md5
+	my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"md5sum $upload_path \"";
+	my $remoteMD5sum = `$systemCall`;
+	@tokens = split(/\s+/, $remoteMD5sum);
+	$remoteMD5sum = $tokens[0];
+	chomp($remoteMD5sum);
+
+	return ($md5sum, $remoteMD5sum);
 }
 
 #print the report
 sub printReport{
-    my ($errors, $files) = @_;
+    my ($ERRORS, $FILES) = @_;
 
     open(OUT, ">$OUTPUT_DIR/status_block.html") || die "Could not write status report\n";
 
@@ -284,7 +399,7 @@ sub printReport{
     print OUT "\t\t\t\t\t\t\t\t<div style=\"padding-top:5px\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t<div class=\"accordion-group\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t<div class=\"accordion-heading\">\n";
-    print OUT "\t\t\t\t\t\t\t\t\t\t\t<a class=\"accordion-toggle\" data-toggle=\"collapse\" href=\"\#errors\">Summary</a>\n";
+    print OUT "\t\t\t\t\t\t\t\t\t\t\t<a class=\"accordion-toggle\" data-toggle=\"collapse\" href=\"\#ERRORS\">Summary</a>\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t</div>\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t<div id=\"summary\" class=\"accordion-body collapse in\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t<div class=\"accordion-inner\">\n";
@@ -297,8 +412,6 @@ sub printReport{
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><th>Variable</th><th>Value</th></tr>\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><td>Target Directory</td><td>$UPLOAD_DIR</td></tr>\n";
 
-    #if we are using SSH we can grab extra info
-    if($PROTOCOL eq "SSH"){
 	#get the target space utilization info
 	my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"df -kh $UPLOAD_DIR\"";
 	my $usageOutput = `$systemCall`;
@@ -308,11 +421,6 @@ sub printReport{
 	print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><td>Target Used</td><td>$usageTokens[9]</td></tr>\n";
 	print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><td>Target Available</td><td>$usageTokens[10]</td></tr>\n";
 	print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><td>Target % Full</td><td>$usageTokens[11]</td></tr>\n";
-    }
-    #else we are SFTP
-    else{
-	
-    }
 
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t</table>\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t</div>\n";
@@ -325,9 +433,9 @@ sub printReport{
     print OUT "\t\t\t\t\t\t\t\t<div style=\"padding-top:5px\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t<div class=\"accordion-group\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t<div class=\"accordion-heading\">\n";
-    print OUT "\t\t\t\t\t\t\t\t\t\t\t<a class=\"accordion-toggle\" data-toggle=\"collapse\" href=\"\#errors\">Errors</a>\n";
+    print OUT "\t\t\t\t\t\t\t\t\t\t\t<a class=\"accordion-toggle\" data-toggle=\"collapse\" href=\"\#ERRORS\">Errors</a>\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t</div>\n";
-    print OUT "\t\t\t\t\t\t\t\t\t\t<div id=\"errors\" class=\"accordion-body collapse in\">\n";
+    print OUT "\t\t\t\t\t\t\t\t\t\t<div id=\"ERRORS\" class=\"accordion-body collapse in\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t<div class=\"accordion-inner\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t<div id=\"variantSummaryInfoPane\" class=\"row-fluid\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<div class=\"row-fluid\">\n";
@@ -335,15 +443,15 @@ sub printReport{
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t<table class=\"table table-condensed\">\n";
 
     #error stuff
-    if(!defined($errors) || scalar @{$errors} == 0){
-	print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><th>No Errors</th></tr>\n";	
+    if(!defined($ERRORS) || scalar @{$ERRORS} == 0){
+		print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><th>No Errors</th></tr>\n";	
     }
     else{
-	#print error messages
-	print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><th>Error</th></tr>\n";
-	foreach my $error (@{$errors}){
-	    print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><td>$error</td></tr>\n";
-	}
+		#print error messages
+		print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><th>Error</th></tr>\n";
+		foreach my $error (@{$ERRORS}){
+			print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><td>$error</td></tr>\n";
+		}
     }
 
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t</table>\n";
@@ -357,9 +465,9 @@ sub printReport{
     print OUT "\t\t\t\t\t\t\t\t<div style=\"padding-top:5px\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t<div class=\"accordion-group\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t<div class=\"accordion-heading\">\n";
-    print OUT "\t\t\t\t\t\t\t\t\t\t\t<a class=\"accordion-toggle\" data-toggle=\"collapse\" href=\"\#files\">Files</a>\n";
+    print OUT "\t\t\t\t\t\t\t\t\t\t\t<a class=\"accordion-toggle\" data-toggle=\"collapse\" href=\"\#FILES\">Files</a>\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t</div>\n";
-    print OUT "\t\t\t\t\t\t\t\t\t\t<div id=\"files\" class=\"accordion-body collapse in\">\n";
+    print OUT "\t\t\t\t\t\t\t\t\t\t<div id=\"FILES\" class=\"accordion-body collapse in\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t<div class=\"accordion-inner\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t<div id=\"variantSummaryInfoPane\" class=\"row-fluid\">\n";
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<div class=\"row-fluid\">\n";
@@ -369,8 +477,8 @@ sub printReport{
     #error stuff
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><th>File</th><th>Status</th><th>Notes</th></tr>\n";
 
-    foreach my $file (sort {$a cmp $b} keys %{$files}){
-	print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><td>$file</td><td>", $files->{$file}->{"status"}, "</td><td>", $files->{$file}->{"notes"}, "</td></tr>\n";
+    foreach my $file (sort {$a cmp $b} keys %{$FILES}){
+		print OUT "\t\t\t\t\t\t\t\t\t\t\t\t\t<tr><td>$file</td><td>", $FILES->{$file}->{"status"}, "</td><td>", $FILES->{$file}->{"notes"}, "</td></tr>\n";
     }
 
     print OUT "\t\t\t\t\t\t\t\t\t\t\t\t</table>\n";
