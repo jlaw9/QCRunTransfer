@@ -206,8 +206,8 @@ sub createJsonFiles{
 	my ($bamFile, $bamFileName) = @_;
 
 	# get the ip address of the current server.
-	my $systemCall = q(ifconfig | grep 'inet addr:' | grep -v "127.0.0.1" | cut -d: -f2 | head -n 1 | awk '{print $1}');
-	my $local_ip = `$systemCall`;
+	my $systemCall = q(/sbin/ifconfig | grep 'inet addr:' | grep -v "127.0.0.1" | cut -d: -f2 | head -n 1 | awk '{print $1}');
+	my $local_ip = `bash -c \"$systemCall\"`;
 	chomp($local_ip);
 	my $TS_version = "not_found";
 #	# TODO get the ts_version of this bam file
@@ -218,7 +218,8 @@ sub createJsonFiles{
 #		else
 #			TS_version="not_found"
 #
-    $systemCall = "python setup_json.py --local_ip $local_ip --bam $bamFile --ts_version $TS_version";
+    $systemCall = "python $PLUGIN_PATH/scripts/setup_json.py --local_ip $local_ip --bam $bamFile --ts_version $TS_version";
+	print "running setup_json.py: $systemCall\n";
     my $results = `$systemCall`;
     my @tokens = split(/\,/, $results);
     my $run_dir = $tokens[0];
@@ -233,6 +234,7 @@ sub createUploadDir{
 	my ($upload_dir) = @_;
     #create the directory
     my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"mkdir -p $upload_dir\"";
+	print "Running: $systemCall\n";
     my $returnStatus = system($systemCall);
 	if($returnStatus ne 0){
 		push(@{$ERRORS}, "Unable to create the run_dir on the server over SSH. Check the username, password, and ip. Quitting.");
@@ -250,7 +252,8 @@ sub pushSampleJson{
 	my $result = `$systemCall`;
 	if(length($result) == 0){
 		# doesn't exist, so push the sample's JSON file. 
-		my $sample_json = "Json_Files/$SAMPLE_NAME.json";
+		# the sample JSON file already has the current run in this sample's list of runs.
+		my $sample_json = "$RESULTS_DIR/$SAMPLE_NAME.json";
 		$FILES = &addFile($sample_json, "$SAMPLE_DIR/$SAMPLE_NAME.json", $FILES);
 	    my $pushExitStatus = &push($sample_json, $ERRORS, $FILES);
 		if($pushExitStatus ne 0){
@@ -258,14 +261,16 @@ sub pushSampleJson{
 			exit(1);
 		}
 	}
-	# copy the sample_json file from the other server, add this run to it and recopy it back over.
-	$systemCall = "python update_json_tool.py --user_password $USER_PASSWORD --json $run_json --add_run_to_sample --server $USER_NAME\@$SERVER_IP";
-	my $returnStatus = system($systemCall);
-	if($returnStatus ne 0){
-		push(@{$ERRORS}, "Unable to add the run to the sample's JSON file located on the analysis server.");
-		&printReport($ERRORS, $FILES);
-		# if this run is not added to the list of runs, then it will not be considered in the analysis.
-		exit(1);
+	else{
+		# copy the sample_json file from the other server, add this run to it and recopy it back over.
+		$systemCall = "python $PLUGIN_PATH/scripts/update_json_tool.py --user_password $USER_PASSWORD --json $run_json --add_run_to_sample --server $USER_NAME\@$SERVER_IP";
+		my $returnStatus = system($systemCall);
+		if($returnStatus ne 0){
+			push(@{$ERRORS}, "Unable to add the run to the sample's JSON file located on the analysis server.");
+			&printReport($ERRORS, $FILES);
+			# if this run is not added to the list of runs, then it will not be considered in the analysis.
+			exit(1);
+		}
 	}
 }
 

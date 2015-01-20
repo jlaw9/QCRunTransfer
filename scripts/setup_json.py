@@ -20,9 +20,9 @@ PGM_BACKUP_PATH="/media/Backup_02/archivedReports"
 class Setup_Json:
 	def __init__(self, plugin_settings, options):
 		self.plugin_settings = plugin_settings
+		self.plugin_path = plugin_settings['plugin_dir']
 		self.options = options
-		self.ex_json = json.load(open('%s.json'%plugin_settings['sample_name']))
-		self.setup_json()
+		self.ex_json = json.load(open('%s/scripts/%s.json'%(self.plugin_path, plugin_settings['project'])))
 
 	# @param run the line of the CSV 
 	def setup_json(self):
@@ -38,29 +38,36 @@ class Setup_Json:
 			run_path = "%s/%s/Run%s" %(self.plugin_settings['upload_path'], self.plugin_settings['sample_name'], self.plugin_settings['run_num'])
 			run_name = "Run" + self.plugin_settings['run_num']
 	
-		sample_json = "%s/%s_%s.json"%(run_path, self.plugin_settings['sample_name'])
+		sample_json = "%s/%s.json"%(run_path, self.plugin_settings['sample_name'])
 	
 		# first write the new run's json file
-		run_json = self.write_run_json(self.plugin_settings['run_num'], run_name, self.plugin_settings['run_type'], self.plugin_settings['sample_name'], run_path, sample_json)
+		run_path, run_json = self.write_run_json(self.plugin_settings['run_num'], run_name, self.plugin_settings['run_type'], self.plugin_settings['sample_name'], run_path, sample_json)
 		# write the sample's json file
 		# technically this only needs to be done once for each sample, but we can just make it every run and then only push it once.
 		sample_json = self.write_sample_json(self.plugin_settings['sample_name'], sample_json, run_json)
+
+		return run_path, run_json
 
 
 	# @returns the path to the run's json on the server
 	def write_run_json(self, runNum, runName, runType, sample, run_path, sample_json):
 		json_name = "%s_%s.json"%(sample,runName)
 		run_json = "%s/%s"%(run_path,json_name)
-		orig_path = self.options.bam.split('/')[:-1]
+		orig_path = '/'.join(self.options.bam.split('/')[:-1])
 		bam = self.options.bam.split('/')[-1]
+		proton = ''
 		# get the run_id_num out of the orig_path by parsing the name. Has to account for the two cases where there could either be a '-' or '_' after the runID
 		# for example: Auto_user_PLU-2_2 vs Auto_user_PLU-3-Ion
-		run_id_num = orig_path.split("Auto_user_")[1].split("-")[1].split("-")[0].split("_")[0]
-		proton = orig_path.split("Auto_user_")[1].split("-")[0]
-		run_id = "%s-%s"%(proton, run_id_num)
+		try:
+			run_id_num = orig_path.split("Auto_user_")[1].split("-")[1].split("-")[0].split("_")[0]
+			proton = orig_path.split("Auto_user_")[1].split("-")[0]
+			run_id = "%s-%s"%(proton, run_id_num)
+		except IndexError:
+			# use the full path instead
+			pass
 		#There are runs (such as a reanalysis) which don't have the common 'PLU-231' format (i.e. Reanalysis_PNET_BC373_Run4). 
 		# We don't use the runID for anything besides to fill in the QC table. I could just leave the entire name in these cases.
-		if len(proton) < 3:
+		if len(proton) < 3 or len(proton) > 3:
 			run_id = orig_path.split("/")[-1]
 	
 		# Write the run's json file which will be used mainly to hold metrics.
@@ -87,15 +94,16 @@ class Setup_Json:
 			"ts_version": self.options.ts_version
 		}
 	
-		# make sure hte JsonFiles directory exists
-		if not os.path.isdir("Json_Files"):
-			os.mkdir("Json_Files")
+		# apparently this script does not have permission to the plugin. Write the JSON files to plugin files of the run.
+		## make sure hte JsonFiles directory exists
+		#if not os.path.isdir("%s/scripts/Json_Files"%self.plugin_path):
+		#	os.mkdir("%s/scripts/Json_Files"%self.plugin_path)
 
 		# dump the json file
-		with open("Json_Files/"+json_name, 'w') as out:
+		with open("%s/%s"%(self.plugin_path, json_name), 'w') as out:
 			json.dump(jsonData, out, sort_keys=True, indent = 2)
 	
-		return run_json
+		return run_path, run_json
 
 
 	# @param sample the name of the current sample
@@ -106,13 +114,18 @@ class Setup_Json:
 		# edit the sample's json file with this sample's info. The other metrics in the sample JSON file should already be set. 
 		self.ex_json["json_file"] = "%s/%s.json"%(sample_path, sample) 
 		self.ex_json["output_folder"] = "%s/QC"%sample_path 
-		# dont set the runs here as things can get overwritten. only set the runs once the bam file has been pushed.
-		#self.ex_json["runs"] = [run_json]
+		# set the list of runs to this current run. 
+		#If the sample json has already been written, this sample json file will not be used, and the current run will be added to the list of runs in the sample json
+		self.ex_json["runs"] = [run_json]
 		self.ex_json["sample_name"] = sample
 		self.ex_json["sample_folder"] = sample_path
-
+	
+		# check if this is an ffpe sample
+		if 'ffpe' in self.plugin_settings:
+			self.ex_json["ffpe"] = True
+	
 		# dump the json file
-		with open("Json_Files/%s.json"%sample, 'w') as out:
+		with open("%s/%s.json"%(self.plugin_path, sample), 'w') as out:
 			json.dump(self.ex_json, out, sort_keys=True, indent = 2)
 
 		# this path will be used to check if the sample's json exists on the server already
@@ -149,11 +162,14 @@ if __name__ == '__main__':
 	plugin_settings = json.load(open(os.environ['RESULTS_DIR'] + '/startplugin.json'))
 	plugin_settings['pluginconfig']['browser_runID'] = plugin_settings['runinfo']['pk']
 	plugin_settings = plugin_settings['pluginconfig']
+	# RESULTS_DIR is the path to the run's plugin dir (i.e. /results/analysis/output/Home/Reanalsys_PNET_BC373_Run4_1342/plugin_out/QCRunTransfer_out.2921)
 	plugin_settings['plugin_dir'] = os.environ['RESULTS_DIR']
 
-	Setup_Json(plugin_settings, options)
-
-	print "Finished setting up the json files for the run to be pushed"
+	setup = Setup_Json(plugin_settings, options)
+	run_path, run_json = setup.setup_json()
+	# only print the run_path and run_json so that driver.pl can use these paths
+	print '%s,%s'%(run_path, run_json)
+	#print "Finished setting up the json files for the run to be pushed"
 
 #	# options were already set by the plugin. Load the settings
 #	plugin_settings = json.load(open(os.environ['RESULTS_DIR'] + '/startplugin.json'))

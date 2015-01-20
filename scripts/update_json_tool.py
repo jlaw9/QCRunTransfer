@@ -114,10 +114,12 @@ if __name__ == "__main__":
 		# get the name of the sample's json file which should be the last item in the list.
 		sample_json_name = runJsonData["sample_json"].split("/")[-1]
 
+		results_dir =  os.environ['RESULTS_DIR']
 		# copy the sample's json file here and check if the copy was successful
-		copy_command = "pscp -pw %s %s:%s Json_Files/"%(options.user_password, options.server, runJsonData["sample_json"])
+		copy_command = "pscp -pw %s %s:%s %s/"%(options.user_password, options.server, runJsonData["sample_json"], results_dir)
 		if runCommandLine(copy_command) == 0:
-			sampleJsonData = json.load(open("Json_Files/"+sample_json_name))
+			sample_json_path = "%s/%s"(results_dir,sample_json_name)
+			sampleJsonData = json.load(open(sample_json_path))
 
 			# append the current run to this sample's list of runs.
 			sampleJsonData['runs'].append(runJsonData['json_file'])
@@ -131,15 +133,15 @@ if __name__ == "__main__":
 			sampleJsonData['sample_status'] = 'pushed'
 			
 			# dump the json file
-			with open("Json_Files/"+sample_json_name, 'w') as out:
+			with open(sample_json_path, 'w') as out:
 				json.dump(sampleJsonData, out, sort_keys=True, indent = 2)
 
 			# copy the edited sample's json file back to the server
-			copy_command = "pscp -pw %s Json_Files/%s %s:%s "%(options.user_password, sample_json_name, options.server, runJsonData["sample_json"])
+			copy_command = "pscp -pw %s %s %s:%s "%(options.user_password, sample_json_path, options.server, runJsonData["sample_json"])
 			if runCommandLine(copy_command)	== 0:
 				print "Added a run to %s, and pushed successfully."%sample_json_name
 		else:
-			print "ERROR: Unable to copy the sample's json file!"
+			print "ERROR: Unable to copy the sample's json file %s!"%runJsonData["sample_json"]
 			sys.exit(1)
 		
 
