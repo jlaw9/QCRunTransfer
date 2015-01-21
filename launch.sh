@@ -34,6 +34,8 @@ run ()
 # Plugin initialization
 # ===================================================
 
+run "git pull";
+
 # remove some files if they are there
 run "rm -rf ${TSP_FILEPATH_PLUGIN_DIR}/*.html";
 
