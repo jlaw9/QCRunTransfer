@@ -34,7 +34,7 @@ run ()
 # Plugin initialization
 # ===================================================
 
-# use git pull here to ensure that we are using the most up-to-date version of the scripts
+# use git pull here to ensure that we are using the most up-to-date version of the plugin scripts
 run "git --git-dir=/results/plugins/QCRunTransfer/.git pull";
 
 # remove some files if they are there
