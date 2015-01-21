@@ -73,7 +73,7 @@ my $FILES = {};
 	# set the path the bam file will be uploaded to on the server we're pushing to
 	my $upload_bam_path = "$run_dir/$bamFileName";
 	# add the bam file to the list of bams to push
-	$FILES = &addFile($bamFile, $upload_bam_path, $FILES);
+	&addFile($bamFile, $upload_bam_path);
 
 	# if the bam file pushes successfully, then we know we should push the rest
 	my $pushExitCode = &push($bamFile, $ERRORS, $FILES);
@@ -89,16 +89,16 @@ my $FILES = {};
     &printReport($ERRORS, $FILES);
 
 	# add the bam index file to the list of bams to push
-	$FILES = &addFile($bamFile.".bai", $upload_bam_path.".bai", $FILES);
+	&addFile($bamFile.".bai", $upload_bam_path.".bai");
 	#add the run json file to the list to be pushed
-	$FILES = &addFile($run_json, $run_dir, $FILES);
+	&addFile($run_json, $run_dir);
 	# starting with 4.2 coverage analysis plugin output folder gets a number assigned so taht users can run multiple times without over-writing the previous coverage analysis plugin result 
 	# example: coverageAnalysis_out.2369. if there are multiple cov results, hopefully they were run with the same BED file! find will get the first instance
-	$FILES = &find_and_add_file("$REPORT_ROOT_DIR/plugin_out/coverageAnalysis_out*/*.amplicon.cov.xls", $run_dir, $FILES);
+	&find_and_add_file("$REPORT_ROOT_DIR/plugin_out/coverageAnalysis_out*/*.amplicon.cov.xls", $run_dir);
 	# check to see if there is a vcf file to push as well. If not, cov or TVC will be run on the analysis server.
-	$FILES = &find_and_add_file("$REPORT_ROOT_DIR/plugin_out/variantCaller_out*/TSVC_variants.vcf", $run_dir, $FILES);
+	&find_and_add_file("$REPORT_ROOT_DIR/plugin_out/variantCaller_out*/TSVC_variants.vcf", $run_dir);
 	# push the report.pdf as well
-	$FILES = &find_and_add_file("$REPORT_ROOT_DIR/report.pdf", $run_dir, $FILES);
+	&find_and_add_file("$REPORT_ROOT_DIR/report.pdf", $run_dir);
 
     #create the report and start uploading
     foreach my $file (sort {$a cmp $b} keys %{$FILES}){
@@ -179,7 +179,7 @@ sub getBam{
 
 # add a file to the $FILES dictionary
 sub addFile{
-	my ($file, $upload_path, $FILES) = @_;
+	my ($file, $upload_path) = @_;
 	$FILES->{$file}->{"upload_path"} = $upload_path;
 	$FILES->{$file}->{"status"} = "Pending";
 	$FILES->{$file}->{"notes"} = "";
@@ -188,7 +188,7 @@ sub addFile{
 
 # if a file exists, add it to the list of FILES to push
 sub find_and_add_file{
-	my ($file, $run_dir, $FILES) = @_;
+	my ($file, $run_dir) = @_;
 
 	# if the file is found, then add it to the list of FILES to push.
 	my $systemCall="find $file -maxdepth 0 2>/dev/null | head -n 1";
@@ -198,7 +198,7 @@ sub find_and_add_file{
 		my @tokens = split(/\//, $filePath);
 		my $fileName = $tokens[scalar @tokens - 1];
 		# add the amplicon.cov.xls file to the list of FILES to be pushed.
-		$FILES = &addFile($filePath, "$run_dir/$fileName", $FILES);
+		&addFile($filePath, "$run_dir/$fileName");
 	}
 	return $FILES;
 }
@@ -257,12 +257,19 @@ sub pushSampleJson{
 		# doesn't exist, so push the sample's JSON file. 
 		# the sample JSON file already has the current run in this sample's list of runs.
 		my $sample_json = "$OUTPUT_DIR/$SAMPLE_NAME.json";
-		$FILES = &addFile($sample_json, "$SAMPLE_DIR/$SAMPLE_NAME.json", $FILES);
-	    my $pushExitStatus = &push($sample_json, $ERRORS, $FILES);
+		&addFile($sample_json, "$SAMPLE_DIR/$SAMPLE_NAME.json");
+		# dont' use the regular push function for this because the sample json will be different for each run
+		#my $pushExitStatus = &push($sample_json, $ERRORS, $FILES);
+		my $systemCall = "pscp -pw $USER_PASSWORD $sample_json $USER_NAME\@$SERVER_IP\:$SAMPLE_DIR/$SAMPLE_NAME.json";
+		my $pushExitStatus = system($systemCall)
 		if($pushExitStatus ne 0){
+			$FILES->{$sample_json}->{"status"} = "Failed";
+			push(@{$ERRORS}, "Unable to push the sample's JSON file needed to run the analysis.");
+			&printReport($ERRORS, $FILES);
 			# The sample json is needed in order to run any analysis so if pushing the sample json fails, quit.
 			exit(1);
 		}
+		$FILES->{$sample_json}->{"status"} = "Uploaded";
 	}
 	else{
 		# copy the sample_json file from the other server, add this run to it and recopy it back over.

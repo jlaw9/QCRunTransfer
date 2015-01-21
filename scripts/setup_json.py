@@ -61,6 +61,7 @@ class Setup_Json:
 		# get the run_id_num out of the orig_path by parsing the name. Has to account for the two cases where there could either be a '-' or '_' after the runID
 		# for example: Auto_user_PLU-2_2 vs Auto_user_PLU-3-Ion
 		try:
+			# this is the best solution I came up with for this. It's not foolproof... but it should work in most cases.
 			run_id_num = orig_path.split("Auto_user_")[1].split("-")[1].split("-")[0].split("_")[0]
 			proton = orig_path.split("Auto_user_")[1].split("-")[0]
 			run_id = "%s-%s"%(proton, run_id_num)
@@ -69,8 +70,10 @@ class Setup_Json:
 			pass
 		#There are runs (such as a reanalysis) which don't have the common 'PLU-231' format (i.e. Reanalysis_PNET_BC373_Run4). 
 		# We don't use the runID for anything besides to fill in the QC table. I could just leave the entire name in these cases.
-		if len(proton) < 3 or len(proton) > 3:
+		if len(proton) != 3: 
 			run_id = orig_path.split("/")[-1]
+			# set the name of the proton as the TSP_PGM_NAME
+			proton = os.environ['TSP_PGM_NAME'][0:3].upper()
 	
 		# Write the run's json file which will be used mainly to hold metrics.
 		jsonData = {

@@ -5,6 +5,7 @@
 			"capture_type":"AmpliSeq",
             "cleanup": true, 
       		"chromosomes_to_analyze": ["chr1"], 
+      		"chromosomes_to_analyze_merged": ["all"], 
 			"end_bed":"/rawdata/support_files/BED/endLoci_Ampliseq.bed",
 			"mark_dups": false,
             "min_amplicon_coverage": "30", 
