@@ -208,7 +208,7 @@ sub createJsonFiles{
 	my ($bamFile, $bamFileName) = @_;
 
 	# get the ip address of the current server.
-	my $systemCall = q(/sbin/ifconfig | grep 'inet addr:' | grep -v "127.0.0.1" | cut -d: -f2 | head -n 1 | awk '{print $1}');
+	my $systemCall = q(/sbin/ifconfig | grep 'inet addr:' | grep -v "127.0.0.1" | cut -d: -f2 | head -n 1 | cut -d' ' -f1);
 	my $local_ip = `bash -c \"$systemCall\"`;
 	chomp($local_ip);
 	my $TS_version = "not_found";
