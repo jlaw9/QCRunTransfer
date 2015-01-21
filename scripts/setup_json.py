@@ -114,7 +114,7 @@ class Setup_Json:
 
 		# edit the sample's json file with this sample's info. The other metrics in the sample JSON file should already be set. 
 		self.ex_json["json_file"] = "%s/%s.json"%(sample_path, sample) 
-		self.ex_json["output_folder"] = "%s/QC"%sample_path 
+		self.ex_json["qc_folder"] = "%s/QC"%sample_path 
 		# set the list of runs to this current run. 
 		#If the sample json has already been written, this sample json file will not be used, and the current run will be added to the list of runs in the sample json
 		self.ex_json["runs"] = [run_json]

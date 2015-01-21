@@ -90,6 +90,8 @@ my $FILES = {};
 
 	# add the bam index file to the list of bams to push
 	$FILES = &addFile($bamFile.".bai", $upload_bam_path.".bai", $FILES);
+	#add the run json file to the list to be pushed
+	$FILES = &addFile($run_json, $run_dir, $FILES);
 	# starting with 4.2 coverage analysis plugin output folder gets a number assigned so taht users can run multiple times without over-writing the previous coverage analysis plugin result 
 	# example: coverageAnalysis_out.2369. if there are multiple cov results, hopefully they were run with the same BED file! find will get the first instance
 	$FILES = &find_and_add_file("$REPORT_ROOT_DIR/plugin_out/coverageAnalysis_out*/*.amplicon.cov.xls", $run_dir, $FILES);
@@ -291,7 +293,7 @@ sub push{
 	if($FILES->{$file}->{"status"} eq "Pending"){
 		# check the md5sum before copying to see if the file has already been copyied before. Bam file takes about 1min 30sec
 		my ($md5sum, $remoteMD5sum) = &check_md5sum($file, $upload_path);
-		if($md5sum eq $remoteMD5sum){
+		if(defined($remoteMD5sum) && ($md5sum eq $remoteMD5sum)){
 			$FILES->{$file}->{"status"} = "Already Uploaded";
 			$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"green\">MD5s Match: $md5sum</font>";
 			&printReport($ERRORS, $FILES);
@@ -358,11 +360,13 @@ sub check_md5sum{
 	@tokens = split(/\//, $file);
 
 	#getremote md5
-	my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"md5sum $upload_path \"";
+	my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"md5sum $upload_path 2>/dev/null \"";
 	my $remoteMD5sum = `$systemCall`;
 	@tokens = split(/\s+/, $remoteMD5sum);
 	$remoteMD5sum = $tokens[0];
-	chomp($remoteMD5sum);
+	if(defined($remoteMD5sum)){
+		chomp($remoteMD5sum);
+	}
 
 	return ($md5sum, $remoteMD5sum);
 }
