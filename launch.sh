@@ -34,7 +34,7 @@ run ()
 # Plugin initialization
 # ===================================================
 
-run "git pull";
+run "cd /results/plugins/QCRunTransfer/ && git pull && cd -";
 
 # remove some files if they are there
 run "rm -rf ${TSP_FILEPATH_PLUGIN_DIR}/*.html";
