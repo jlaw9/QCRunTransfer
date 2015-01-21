@@ -35,7 +35,7 @@ run ()
 # ===================================================
 
 # use git pull here to ensure that we are using the most up-to-date version of the plugin scripts
-run "git --git-dir=/results/plugins/QCRunTransfer/.git pull";
+run "sudo git --git-dir=/results/plugins/QCRunTransfer/.git pull";
 
 # remove some files if they are there
 run "rm -rf ${TSP_FILEPATH_PLUGIN_DIR}/*.html";
