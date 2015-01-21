@@ -39,13 +39,14 @@ class Setup_Json:
 			run_path = "%s/%s/Run%s" %(self.plugin_settings['upload_path'], self.plugin_settings['sample_name'], self.plugin_settings['run_num'])
 			run_name = "Run" + self.plugin_settings['run_num']
 	
-		sample_json = "%s/%s.json"%(run_path, self.plugin_settings['sample_name'])
+		# set the sample_json path
+		sample_json = "%s/%s/%s.json"%(self.plugin_settings['upload_path'], self.plugin_settings['sample_name'], self.plugin_settings['sample_name'])
 	
 		# first write the new run's json file
 		run_path, run_json, run_plugin_json_path = self.write_run_json(self.plugin_settings['run_num'], run_name, self.plugin_settings['run_type'], self.plugin_settings['sample_name'], run_path, sample_json)
 		# write the sample's json file
 		# technically this only needs to be done once for each sample, but we can just make it every run and then only push it once.
-		sample_json = self.write_sample_json(self.plugin_settings['sample_name'], sample_json, run_json)
+		self.write_sample_json(self.plugin_settings['sample_name'], sample_json, run_json)
 
 		return run_path, run_plugin_json_path
 
@@ -114,7 +115,7 @@ class Setup_Json:
 		sample_path = "%s/%s"%(self.plugin_settings['upload_path'], sample)
 
 		# edit the sample's json file with this sample's info. The other metrics in the sample JSON file should already be set. 
-		self.ex_json["json_file"] = "%s/%s.json"%(sample_path, sample) 
+		self.ex_json["json_file"] = sample_json 
 		self.ex_json["qc_folder"] = "%s/QC"%sample_path 
 		# set the list of runs to this current run. 
 		#If the sample json has already been written, this sample json file will not be used, and the current run will be added to the list of runs in the sample json
@@ -129,9 +130,6 @@ class Setup_Json:
 		# dump the json file
 		with open("%s/%s.json"%(self.output_dir, sample), 'w') as out:
 			json.dump(self.ex_json, out, sort_keys=True, indent = 2)
-
-		# this path will be used to check if the sample's json exists on the server already
-		return "%s/%s.json"%(sample_path, sample)
 
 
 if __name__ == '__main__':
