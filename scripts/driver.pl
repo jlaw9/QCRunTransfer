@@ -236,7 +236,8 @@ sub createUploadDir{
 	my ($upload_dir) = @_;
     #create the directory
     my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"mkdir -p $upload_dir\"";
-	print "Running: $systemCall\n";
+	# don't print the password to the text file :)
+	print "Running: ssh $USER_NAME\@$SERVER_IP \"mkdir -p $upload_dir\"\n";
     my $returnStatus = system($systemCall);
 	if($returnStatus ne 0){
 		push(@{$ERRORS}, "Unable to create the run_dir on the server over SSH. Check the username, password, and ip. Quitting.");
