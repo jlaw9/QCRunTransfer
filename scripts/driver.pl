@@ -57,7 +57,7 @@ my $FILES = {};
 
     #if we have ERRORS let's print the report
     if(defined($ERRORS) && scalar @{$ERRORS} != 0){
-		&printReport($ERRORS, $FILES);
+		&printReport();
 		exit(1);
     }
 
@@ -76,17 +76,17 @@ my $FILES = {};
 	&addFile($bamFile, $upload_bam_path);
 
 	# if the bam file pushes successfully, then we know we should push the rest
-	my $pushExitCode = &push($bamFile, $ERRORS, $FILES);
+	my $pushExitCode = &push($bamFile);
 	if($pushExitCode != 0){
 		# if the bam file didn't push, then don't push any of the other FILES. The report was already printed
 		exit(1);
 	}
 
 	# check to see if the sample JSON needs to be pushed or add this run to the sample JSON file.
-	&pushSampleJson($FILES, $run_json);
+	&pushSampleJson($run_json);
 
     #print the report since we are starting the upload process
-    &printReport($ERRORS, $FILES);
+    &printReport();
 
 	# add the bam index file to the list of bams to push
 	&addFile($bamFile.".bai", $upload_bam_path.".bai");
@@ -103,11 +103,11 @@ my $FILES = {};
     #create the report and start uploading
     foreach my $file (sort {$a cmp $b} keys %{$FILES}){
 		print "Working on $file\n";
-	    &push($file, $ERRORS, $FILES);
+	    &push($file);
     }
 
     #print out final review
-    &printReport($ERRORS, $FILES);
+    &printReport();
 }
 
 #    #see if this is a barcoded run or not
@@ -167,7 +167,7 @@ sub getBam{
 		else{
 			# there is an error, print the report and exit
 			push(@{$ERRORS}, "No BAM file for barcode $BARCODE at $bamFile - quitting");
-			&printReport($ERRORS, $FILES);
+			&printReport();
 			exit(1);
 		}
 	}
@@ -183,7 +183,6 @@ sub addFile{
 	$FILES->{$file}->{"upload_path"} = $upload_path;
 	$FILES->{$file}->{"status"} = "Pending";
 	$FILES->{$file}->{"notes"} = "";
-	return $FILES;
 }
 
 # if a file exists, add it to the list of FILES to push
@@ -200,7 +199,6 @@ sub find_and_add_file{
 		# add the amplicon.cov.xls file to the list of FILES to be pushed.
 		&addFile($filePath, "$run_dir/$fileName");
 	}
-	return $FILES;
 }
 
 # create the Sample and Run JSON FILES to be pushed
@@ -211,15 +209,23 @@ sub createJsonFiles{
 	my $systemCall = q(/sbin/ifconfig | grep 'inet addr:' | grep -v "127.0.0.1" | cut -d: -f2 | head -n 1 | cut -d' ' -f1);
 	my $local_ip = `bash -c \"$systemCall\"`;
 	chomp($local_ip);
+
+#	get the ts_version of this bam file from the 'version.txt' file
 	my $TS_version = "not_found";
-#	# TODO get the ts_version of this bam file
-#    if( -e $ENV{"TSP_FILEPATH_BARCODE_TXT"}){
-#		my $TS_version=`grep -oE \"version.*\" $1 -m 1 2>/dev/null | grep -oe "[0-9]\.[0-9]" | perl -ne "chomp and print"`
-#		if [ "$TS_version" == "" ]; then
-#			TS_version=`grep -oE "Torrent_Suite=.*" $1 -m 1 2>/dev/null | grep -oe "[0-9]\.[0-9]" | perl -ne "chomp and print"`
-#		else
-#			TS_version="not_found"
-#
+    if( -e "$REPORT_ROOT_DIR/version.txt"){
+		$TS_version=`grep -oE \"version.*\" $REPORT_ROOT_DIR/version.txt -m 1 2>/dev/null | grep -oe \"[0-9]\.[0-9]\" | perl -ne \"chomp and print\"`;
+		chomp($TS_version);
+		if(length($TS_version) eq 0){
+			# this should be the most recent version of version.txt
+			$TS_version=`grep -oE \"Torrent_Suite=.*\" $REPORT_ROOT_DIR/version.txt -m 1 2>/dev/null | grep -oe \"[0-9]\.[0-9]\" | perl -ne \"chomp and print\"`;
+			chomp($TS_version);
+		}
+		else{
+			$TS_version="not_found"
+		}
+	}
+
+	# now create the run and sample json files
     $systemCall = "python $PLUGIN_PATH/scripts/setup_json.py --local_ip $local_ip --bam $bamFile --ts_version $TS_version";
 	print "running setup_json.py: $systemCall\n";
     my $results = `$systemCall`;
@@ -241,14 +247,14 @@ sub createUploadDir{
     my $returnStatus = system($systemCall);
 	if($returnStatus ne 0){
 		push(@{$ERRORS}, "Unable to create the run_dir on the server over SSH. Check the username, password, and ip. Quitting.");
-		&printReport($ERRORS, $FILES);
+		&printReport();
 		exit(1);
     }
 }
 
 # check to push the sampleJSON
 sub pushSampleJson{
-    my ($FILES, $run_json) = @_;
+    my ($run_json) = @_;
 	# Check to see if this sample's JSON file already exists
 	# Check this first to avoid conflict with other runs of this sample that are also being pushed.
     my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"stat $SAMPLE_DIR/$SAMPLE_NAME.json 2>/dev/null\"";
@@ -259,13 +265,13 @@ sub pushSampleJson{
 		my $sample_json = "$OUTPUT_DIR/$SAMPLE_NAME.json";
 		&addFile($sample_json, "$SAMPLE_DIR/$SAMPLE_NAME.json");
 		# dont' use the regular push function for this because the sample json will be different for each run
-		#my $pushExitStatus = &push($sample_json, $ERRORS, $FILES);
+		#my $pushExitStatus = &push($sample_json);
 		my $systemCall = "pscp -pw $USER_PASSWORD $sample_json $USER_NAME\@$SERVER_IP\:$SAMPLE_DIR/$SAMPLE_NAME.json";
-		my $pushExitStatus = system($systemCall)
+		my $pushExitStatus = system($systemCall);
 		if($pushExitStatus ne 0){
 			$FILES->{$sample_json}->{"status"} = "Failed";
 			push(@{$ERRORS}, "Unable to push the sample's JSON file needed to run the analysis.");
-			&printReport($ERRORS, $FILES);
+			&printReport();
 			# The sample json is needed in order to run any analysis so if pushing the sample json fails, quit.
 			exit(1);
 		}
@@ -277,7 +283,7 @@ sub pushSampleJson{
 		my $returnStatus = system($systemCall);
 		if($returnStatus ne 0){
 			push(@{$ERRORS}, "Unable to add the run to the sample's JSON file located on the analysis server.");
-			&printReport($ERRORS, $FILES);
+			&printReport();
 			# if this run is not added to the list of runs, then it will not be considered in the analysis.
 			exit(1);
 		}
@@ -287,7 +293,7 @@ sub pushSampleJson{
 
 #push a file over
 sub push{
-    my ($file, $ERRORS, $FILES) = @_;
+    my ($file) = @_;
 
 	# upload path:
 	my $upload_path = $FILES->{$file}->{"upload_path"};
@@ -304,7 +310,7 @@ sub push{
 		if(defined($remoteMD5sum) && ($md5sum eq $remoteMD5sum)){
 			$FILES->{$file}->{"status"} = "Already Uploaded";
 			$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"green\">MD5s Match: $md5sum</font>";
-			&printReport($ERRORS, $FILES);
+			&printReport();
 		}
 		else{
 			my $size = `ls -lh $file`;
@@ -315,7 +321,7 @@ sub push{
 			$FILES->{$file}->{"status"} = "Uploading";
 			#$FILES->{$file}->{"notes"} = "Started: $date<br>Size: $size Reads: $numReads";
 			$FILES->{$file}->{"notes"} = "Started: $date<br>Size: $size";
-			&printReport($ERRORS, $FILES);
+			&printReport();
 
 			# push the file
 			my $systemCall = "pscp -pw $USER_PASSWORD $file $USER_NAME\@$SERVER_IP\:$upload_path";
@@ -332,7 +338,7 @@ sub push{
 				$FILES->{$file}->{"status"} = "<font color=\"red\">Upload Failed</font>";
 				$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br>";
 				push(@{$ERRORS}, "Failed upload on $file");
-				&printReport($ERRORS, $FILES);
+				&printReport();
 			}
 			else{
 				# check the md5sum to see if the FILES match completely
@@ -340,7 +346,7 @@ sub push{
 				if($md5sum eq $remoteMD5sum){
 					$FILES->{$file}->{"status"} = "Upload Complete";
 					$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"green\">MD5s Match: $md5sum</font>";
-					&printReport($ERRORS, $FILES);
+					&printReport();
 				}
 				else{
 					# something went wrong with the push!
@@ -348,7 +354,7 @@ sub push{
 					$FILES->{$file}->{"status"} = "MD5 Mismtach";
 					$FILES->{$file}->{"notes"} = $FILES->{$file}->{"notes"}."<br>Finished: $date<br><font color=\"red\">MD5s Mismatch: $md5sum / $remoteMD5sum</font>";
 					push(@{$ERRORS}, "Mistmatch MD5sum on $file");
-					&printReport($ERRORS, $FILES);
+					&printReport();
 				}
 			}
 		}
@@ -381,8 +387,6 @@ sub check_md5sum{
 
 #print the report
 sub printReport{
-    my ($ERRORS, $FILES) = @_;
-
     open(OUT, ">$OUTPUT_DIR/status_block.html") || die "Could not write status report\n";
 
     print OUT "<!DOCTYPE html>\n";
