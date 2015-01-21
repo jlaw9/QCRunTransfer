@@ -42,12 +42,12 @@ class Setup_Json:
 		sample_json = "%s/%s.json"%(run_path, self.plugin_settings['sample_name'])
 	
 		# first write the new run's json file
-		run_path, run_json = self.write_run_json(self.plugin_settings['run_num'], run_name, self.plugin_settings['run_type'], self.plugin_settings['sample_name'], run_path, sample_json)
+		run_path, run_json, run_plugin_json_path = self.write_run_json(self.plugin_settings['run_num'], run_name, self.plugin_settings['run_type'], self.plugin_settings['sample_name'], run_path, sample_json)
 		# write the sample's json file
 		# technically this only needs to be done once for each sample, but we can just make it every run and then only push it once.
 		sample_json = self.write_sample_json(self.plugin_settings['sample_name'], sample_json, run_json)
 
-		return run_path, run_json
+		return run_path, run_plugin_json_path
 
 
 	# @returns the path to the run's json on the server
@@ -100,11 +100,12 @@ class Setup_Json:
 		#if not os.path.isdir("%s/scripts/Json_Files"%self.output_dir):
 		#	os.mkdir("%s/scripts/Json_Files"%self.output_dir)
 
+		run_plugin_json_path = "%s/%s"%(self.output_dir, json_name)
 		# dump the json file
-		with open("%s/%s"%(self.output_dir, json_name), 'w') as out:
+		with open(run_plugin_json_path, 'w') as out:
 			json.dump(jsonData, out, sort_keys=True, indent = 2)
 	
-		return run_path, run_json
+		return run_path, run_json, run_plugin_json_path
 
 
 	# @param sample the name of the current sample
@@ -165,9 +166,9 @@ if __name__ == '__main__':
 	plugin_settings = plugin_settings['pluginconfig']
 
 	setup = Setup_Json(plugin_settings, options)
-	run_path, run_json = setup.setup_json()
+	run_path, run_plugin_json_path = setup.setup_json()
 	# only print the run_path and run_json so that driver.pl can use these paths
-	print '%s,%s'%(run_path, run_json)
+	print '%s,%s'%(run_path, run_plugin_json_path)
 	#print "Finished setting up the json files for the run to be pushed"
 
 #	# options were already set by the plugin. Load the settings
