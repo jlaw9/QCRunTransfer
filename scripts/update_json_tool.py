@@ -119,7 +119,7 @@ if __name__ == "__main__":
 		copy_command = "pscp -pw %s %s:%s %s/"%(options.user_password, options.server, runJsonData["sample_json"], results_dir)
 		if runCommandLine(copy_command) == 0:
 			# load the sample json that we copied to the results dir.
-			sample_json_plugin_path = "%s/%s"(results_dir,sample_json_name)
+			sample_json_plugin_path = "%s/%s"%(results_dir,sample_json_name)
 			sampleJsonData = json.load(open(sample_json_plugin_path))
 
 			# append the current run to this sample's list of runs.
