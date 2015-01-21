@@ -93,6 +93,7 @@ class Setup_Json:
 			"sample_json": sample_json,
 			"server_ip": self.options.local_ip,
 			"torrent_suite_link": "http://%s/report/%s"%(self.options.local_ip, self.plugin_settings['browser_runID']),
+			"orig_filepath_plugin_dir": plugin_settings['tsp_filepath_plugin_dir'],
 			"ts_version": self.options.ts_version
 		}
 	
@@ -162,6 +163,8 @@ if __name__ == '__main__':
 	plugin_settings = json.load(open(os.environ['TSP_FILEPATH_PLUGIN_DIR'] + '/startplugin.json'))
 	plugin_settings['pluginconfig']['browser_runID'] = plugin_settings['runinfo']['pk']
 	plugin_settings = plugin_settings['pluginconfig']
+	# set this path so that the script can copy back the excel file after it finishes
+	plugin_settings['tsp_filepath_plugin_dir'] = os.environ['TSP_FILEPATH_PLUGIN_DIR']
 
 	setup = Setup_Json(plugin_settings, options)
 	run_path, run_plugin_json_path = setup.setup_json()
