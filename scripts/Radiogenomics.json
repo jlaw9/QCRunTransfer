@@ -40,6 +40,7 @@
     ], 
 	"json_file":"/mnt/Despina/projects/PNET/125/125.json",
 	"json_type":"sample",
+	"results_qc_json": "/mnt/Despina/projects/PNET/125/QC",
 	"qc_folder":"/mnt/Despina/projects/PNET/125/QC",
 	"project":"PNET",
 	"runs":[],

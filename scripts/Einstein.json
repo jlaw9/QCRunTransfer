@@ -29,12 +29,14 @@
 			"type":"germline",
 			"wt_cutoff":".2"
 		},
-		"type":"qc_compare"
+		"type":"qc_sample"
 	},
 	"emails":[
 		"test123@me.com"
 	],
 	"json_file":"/mnt/Despina/projects/Einstein/E0268/E0268.json",
+	"json_type":"sample",
+	"results_qc_json": "/mnt/Despina/projects/PNET/125/QC",
 	"qc_folder":"/mnt/Despina/projects/Einstein/E0268/QC",
 	"project":"Einstein",
 	"runs":[],

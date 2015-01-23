@@ -120,6 +120,7 @@ class Setup_Json:
 
 		# edit the sample's json file with this sample's info. The other metrics in the sample JSON file should already be set. 
 		self.ex_json["json_file"] = sample_json 
+		self.ex_json["results_qc_json"] = "%s/QC/results_QC.json"%sample_path 
 		self.ex_json["qc_folder"] = "%s/QC"%sample_path 
 		# set the list of runs to this current run. 
 		#If the sample json has already been written, this sample json file will not be used, and the current run will be added to the list of runs in the sample json
@@ -129,7 +130,11 @@ class Setup_Json:
 	
 		# check if this is an ffpe sample
 		if 'ffpe' in self.plugin_settings:
-			self.ex_json["ffpe"] = True
+			if 'analysis' not in self.ex_json:
+				self.ex_json['analysis'] = {}
+			if 'settings' not in self.ex_json['analysis']:
+				self.ex_json['analysis']['settings'] = {}
+			self.ex_json['analysis']['settings']["ffpe"] = True
 	
 		# dump the json file
 		with open("%s/%s.json"%(self.output_dir, sample), 'w') as out:
