@@ -3,9 +3,17 @@
 		"settings":{
 			"beg_bed":"/rawdata/support_files/BED/startLoci_Ampliseq.bed",
 			"capture_type":"AmpliSeq",
-            "cleanup": false, 
+            "cleanup": true, 
       		"chromosomes_to_analyze": ["chr1"], 
-			"cds_bed":"/rawdata/support_files/BED/CDSonly.bed",
+      		"chromosomes_to_analyze_merged": ["chr1"], 
+			"cutoffs": {
+				"error_rate": 3.0e-5,
+				"exp_median_read_length": 196, 
+				"perc_exp_median_read_length": 0.70, 
+				"begin_end_amp_cov": 0.5,
+				"run_amp_cov": 0.5,
+				"merged_amp_cov": 0.9
+			},
 			"end_bed":"/rawdata/support_files/BED/endLoci_Ampliseq.bed",
 			"hom_cutoff":".8",
 			"mark_dups": false,
