@@ -140,7 +140,7 @@ if __name__ == "__main__":
 
 			# copy the edited sample's json file back to the server
 			copy_command = "pscp -pw %s %s %s:%s "%(options.user_password, sample_json_plugin_path, options.server, runJsonData["sample_json"])
-			print "	Running pscp -pw xxx %s %s:%s "%(options.user_password, sample_json_plugin_path, options.server, runJsonData["sample_json"])
+			print "	Running pscp -pw xxx %s %s:%s "%(sample_json_plugin_path, options.server, runJsonData["sample_json"])
 			if runCommandLine(copy_command)	== 0:
 				print "Added a run to %s, and pushed successfully."%sample_json_name
 		else:
