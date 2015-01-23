@@ -159,6 +159,7 @@ sub getBam{
 
 		# now add the barcode
 		$bamFile = $REPORT_ROOT_DIR . "/" . $BARCODE . "_" . $bamFileName;
+		$bamFileName = $BARCODE . "_" . $bamFileName;
 
 		#see if the file exists since barcode file shows all barcodes in the set whether used or not
 		if( -e $bamFile){
