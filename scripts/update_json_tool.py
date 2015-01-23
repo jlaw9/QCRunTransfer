@@ -117,7 +117,7 @@ if __name__ == "__main__":
 		results_dir =  os.environ['RESULTS_DIR']
 		# copy the sample's json file here and check if the copy was successful
 		copy_command = "pscp -pw %s %s:%s %s/"%(options.user_password, options.server, runJsonData["sample_json"], results_dir)
-		print "	Running pscp -pw xxx %s:%s %s/"%(options.user_password, options.server, runJsonData["sample_json"], results_dir)
+		print "	Running pscp -pw xxx %s:%s %s/"%(options.server, runJsonData["sample_json"], results_dir)
 		if runCommandLine(copy_command) == 0:
 			# load the sample json that we copied to the results dir.
 			sample_json_plugin_path = "%s/%s"%(results_dir,sample_json_name)
