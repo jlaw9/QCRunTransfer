@@ -65,7 +65,7 @@ my $FILES = {};
 	my ($bamFile, $bamFileName) = &getBam();
 
 	# get the upload path of the run_dir on the server and create the sample and run JSON FILES.
-	my ($run_dir, $run_json) = &createJsonFiles($bamFile, $bamFileName);
+	my ($run_dir, $run_json, $run_json_upload_path) = &createJsonFiles($bamFile, $bamFileName);
 
     #create the directory where we will stick the data
     my $returnStatus = &createUploadDir($run_dir);
@@ -91,7 +91,7 @@ my $FILES = {};
 	# add the bam index file to the list of bams to push
 	&addFile($bamFile.".bai", $upload_bam_path.".bai");
 	#add the run json file to the list to be pushed
-	&addFile($run_json, $run_dir);
+	&addFile($run_json, $run_json_upload_path);
 	# starting with 4.2 coverage analysis plugin output folder gets a number assigned so taht users can run multiple times without over-writing the previous coverage analysis plugin result 
 	# example: coverageAnalysis_out.2369. if there are multiple cov results, hopefully they were run with the same BED file! find will get the first instance
 	&find_and_add_file("$REPORT_ROOT_DIR/plugin_out/coverageAnalysis_out*/*.amplicon.cov.xls", $run_dir);
@@ -229,12 +229,19 @@ sub createJsonFiles{
     $systemCall = "python $PLUGIN_PATH/scripts/setup_json.py --local_ip $local_ip --bam $bamFile --ts_version $TS_version";
 	print "running setup_json.py: $systemCall\n";
     my $results = `$systemCall`;
+
+	# get the run_dir and run_json from the output of setup_json.py
     my @tokens = split(/\,/, $results);
     my $run_dir = $tokens[0];
     my $run_json = $tokens[1];
 	chomp($run_dir);
     chomp($run_json);
-	return ($run_dir, $run_json);
+
+	# also get the upload path of the run_json
+    @tokens = split(/\//, $run_json);
+	my $run_json_upload_path = $run_dir . "/" . $tokens[scalar @tokens - 1];
+
+	return ($run_dir, $run_json, $run_json_upload_path);
 }
 
 #create the directory to upload
