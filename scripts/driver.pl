@@ -228,6 +228,9 @@ sub createJsonFiles{
 
 	# now create the run and sample json files
     $systemCall = "python $PLUGIN_PATH/scripts/setup_json.py --local_ip $local_ip --bam $bamFile --ts_version $TS_version";
+	if($BARCODE ne ""){
+		$systemCall = $systemCall . " --barcode " . $BARCODE;
+	}
 	print "running setup_json.py: $systemCall\n";
     my $results = `$systemCall`;
 

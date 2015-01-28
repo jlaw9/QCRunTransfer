@@ -99,6 +99,10 @@ class Setup_Json:
 			"orig_filepath_plugin_dir": plugin_settings['tsp_filepath_plugin_dir'],
 			"ts_version": self.options.ts_version
 		}
+
+		# If this is a barcoded run, save the barcode
+		if self.options.barcode:
+			jsonData['barcode'] = self.options.barcode
 	
 		# apparently this script does not have permission to the plugin. Write the JSON files to plugin files of the run.
 		## make sure hte JsonFiles directory exists
@@ -150,6 +154,7 @@ if __name__ == '__main__':
 	parser.add_option('-l', '--local_ip', dest='local_ip', help='Required. the ip address of this machine')
 	parser.add_option('-b', '--bam', dest='bam', help='Required. The /path/to/bam file that will be pushed')
 	parser.add_option('-t', '--ts_version', dest='ts_version', help='Required. The version of TS used to make the bam file.')
+	parser.add_option('-B', '--barcode', dest='barcode', help='The name of the barcode (if this is a barcoded run)')
 #	parser.add_option('-d', '--destination', dest='destination', help='Required. The destination path where the sample will be copied to.')
 #	parser.add_option('-i', '--input', dest='input', help='Required. The input csv file containing the metadata about each sample to be pushed.')
 #	parser.add_option('-j', '--ex_json', dest='ex_json', help='Required. The example json file containing the settings necessary for this project. Should be different for every project. For help of how to create the example json file, see the protocls')
