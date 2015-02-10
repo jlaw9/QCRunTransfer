@@ -1,0 +1,51 @@
+{
+    "analysis": {
+        "settings": {
+			"beg_bed":"/rawdata/support_files/BED/Radiogenomics/Radiogen_start_Exclude2genes.bed",
+			"capture_type":"AmpliSeq",
+            "cleanup": true, 
+      		"chromosomes_to_analyze": ["all"], 
+			"cutoffs": {
+				"error_rate": 2.0e-4,
+				"exp_median_read_length": 105, 
+				"perc_exp_median_read_length": 0.85, 
+				"begin_end_amp_cov": 0.5,
+				"run_amp_cov": 0.5,
+				"merged_amp_cov": 0.9
+			},
+			"end_bed":"/rawdata/support_files/BED/Radiogenomics/Radiogen_end_Exclude2genes.bed",
+			"mark_dups": false,
+            "min_amplicon_coverage": "30", 
+            "normal_hom_cutoff": ".8", 
+            "normal_min_base_coverage": "30", 
+			"normal_tvc_json":"/rawdata/support_files/parameter_sets/local_parameters_germline.json",
+            "normal_wt_cutoff": ".2", 
+            "pool_dropout": false, 
+            "priority": "1", 
+			"project_bed":"/rawdata/support_files/BED/Radiogenomics/IAD38165_Designed_muc16znf717excluded.bed",
+			"qc_merged_bed":"/rawdata/support_files/BED/Radiogenomics/IAD38165_Designed_mergedDetail.bed",
+			"qc_unmerged_bed":"/rawdata/support_files/BED/Radiogenomics/IAD38165_Designed_unmergedDetail.bed",
+            "queue": "all.q", 
+            "tumor_hom_cutoff": ".8", 
+            "tumor_min_base_coverage": "30", 
+			"tumor_tvc_json":"/rawdata/support_files/parameter_sets/local_parameters_somatic.json",
+            "tumor_wt_cutoff": ".2", 
+            "type": "all_tumor_normal"
+        }, 
+        "type": "qc_sample"
+    }, 
+    "emails": [
+        "test123@me.com"
+    ], 
+	"json_file":"/rawdata/projects/LungBio/pair_001/pair_001.json",
+	"json_type":"sample",
+	"results_qc_json": "/rawdata/projects/LungBio/pair_001/QC/results_QC.json",
+	"qc_folder":"/rawdata/projects/LungBio/pair_001/QC/results_QC.json",
+	"project":"LungBio",
+	"runs":[],
+	"sample_name":"pair_001",
+	"sample_folder":"/rawdata/projects/LungBio/pair_001",
+	"sample_status":"pushed",
+	"sample_type":"tumor_normal",
+	"status":"pending"
+}
