@@ -26,10 +26,10 @@
 			"qc_merged_bed":"/rawdata/support_files/BED/Radiogenomics/IAD38165_Designed_mergedDetail.bed",
 			"qc_unmerged_bed":"/rawdata/support_files/BED/Radiogenomics/IAD38165_Designed_unmergedDetail.bed",
             "queue": "all.q", 
-            "tumor_hom_cutoff": ".8", 
+            "tumor_hom_cutoff": ".7", 
             "tumor_min_base_coverage": "30", 
 			"tumor_tvc_json":"/rawdata/support_files/parameter_sets/local_parameters_somatic.json",
-            "tumor_wt_cutoff": ".2", 
+            "tumor_wt_cutoff": ".1", 
             "type": "all_tumor_normal"
         }, 
         "type": "qc_sample"
