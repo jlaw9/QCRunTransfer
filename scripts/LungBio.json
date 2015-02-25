@@ -8,7 +8,7 @@
 			"cutoffs": {
 				"error_rate": 2.0e-4,
 				"exp_median_read_length": 105, 
-				"perc_exp_median_read_length": 0.85, 
+				"perc_exp_median_read_length": 0.75, 
 				"begin_end_amp_cov": 0.5,
 				"run_amp_cov": 0.5,
 				"merged_amp_cov": 0.9
