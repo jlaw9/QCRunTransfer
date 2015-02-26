@@ -99,6 +99,10 @@ my $FILES = {};
 	&find_and_add_file("$REPORT_ROOT_DIR/plugin_out/variantCaller_out*/TSVC_variants.vcf", $run_dir);
 	# push the report.pdf as well
 	&find_and_add_file("$REPORT_ROOT_DIR/report.pdf", $run_dir);
+	# push the ionstats_alignment.json file
+	&find_and_add_file("$REPORT_ROOT_DIR/ionstats_alignment.json", "$run_dir/Analysis_Files");
+	# push the serialized*.json file
+	&find_and_add_file("$REPORT_ROOT_DIR/serialized*.json", "$run_dir/Analysis_Files");
 
     #create the report and start uploading
     foreach my $file (sort {$a cmp $b} keys %{$FILES}){
@@ -252,9 +256,9 @@ sub createJsonFiles{
 sub createUploadDir{
 	my ($upload_dir) = @_;
     #create the directory
-    my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"mkdir -p $upload_dir\"";
+    my $systemCall = "sshpass -p $USER_PASSWORD ssh $USER_NAME\@$SERVER_IP \"mkdir -p $upload_dir/Analysis_Files\"";
 	# don't print the password to the text file :)
-	print "Running: ssh $USER_NAME\@$SERVER_IP \"mkdir -p $upload_dir\"\n";
+	print "Running: ssh $USER_NAME\@$SERVER_IP \"mkdir -p $upload_dir/Analysis_Files\"\n";
     my $returnStatus = system($systemCall);
 	if($returnStatus ne 0){
 		push(@{$ERRORS}, "Unable to create the run_dir on the server over SSH. Check the username, password, and ip. Quitting.");
