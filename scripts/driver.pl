@@ -99,10 +99,12 @@ my $FILES = {};
 	&find_and_add_file("$REPORT_ROOT_DIR/plugin_out/variantCaller_out*/TSVC_variants.vcf", $run_dir);
 	# push the report.pdf as well
 	&find_and_add_file("$REPORT_ROOT_DIR/report.pdf", $run_dir);
-	# push the ionstats_alignment.json file
-	&find_and_add_file("$REPORT_ROOT_DIR/ionstats_alignment.json", "$run_dir/Analysis_Files");
-	# push the serialized*.json file
-	&find_and_add_file("$REPORT_ROOT_DIR/serialized*.json", "$run_dir/Analysis_Files");
+	# push the ionstats_alignment.json file if this is not a barcoded runs. The ionstats_alignment statistics are not available for barcoded runs
+	if($BARCODE eq ""){
+		&find_and_add_file("$REPORT_ROOT_DIR/ionstats_alignment.json", "$run_dir/Analysis_Files");
+		# push the serialized*.json file
+		&find_and_add_file("$REPORT_ROOT_DIR/serialized*.json", "$run_dir/Analysis_Files");
+	}
 
     #create the report and start uploading
     foreach my $file (sort {$a cmp $b} keys %{$FILES}){
