@@ -38,7 +38,7 @@ class Setup_Json:
 		else:
 			run_path = "%s/%s/Run%s" %(self.plugin_settings['upload_path'], self.plugin_settings['sample_name'], self.plugin_settings['run_num'])
 			run_name = "Run" + self.plugin_settings['run_num']
-	
+
 		# set the sample_json path
 		sample_json = "%s/%s/%s.json"%(self.plugin_settings['upload_path'], self.plugin_settings['sample_name'], self.plugin_settings['sample_name'])
 	
@@ -132,6 +132,11 @@ class Setup_Json:
 		self.ex_json["runs"] = [run_json]
 		self.ex_json["sample_name"] = sample
 		self.ex_json["sample_folder"] = sample_path
+
+		# set the emails
+		for email in self.plugin_settings['email'].split(','):
+			email = email.strip()
+			self.ex_json['emails'].append(email)
 	
 		# check if this is an ffpe sample
 		if 'ffpe' in self.plugin_settings:

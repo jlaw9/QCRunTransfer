@@ -21,6 +21,7 @@ my $RUN_TYPE = $ENV{"PLUGINCONFIG__RUN_TYPE"};
 my $PROJECT = $ENV{"PLUGINCONFIG__PROJECT"};
 my $BARCODE = $ENV{"PLUGINCONFIG__BARCODE"};
 my $FFPE = $ENV{"PLUGINCONFIG__FFPE"};
+my $EMAIL = $ENV{"PLUGINCONFIG__EMAIL"};
 my $SAMPLE_DIR = $UPLOAD_DIR . "/" . $SAMPLE_NAME;
 #my $RUN_DIR = $SAMPLE_NAME_DIR . "/" . $RUN
 
@@ -31,10 +32,6 @@ my $FILES = {};
 
 #force scope
 {
-	# small test
-	print "FFPE: $FFPE\n";
-    #check to make sure we don't have any ERRORS
-
     if($SERVER_IP eq ""){
 		push(@{$ERRORS}, "No server name / IP provided");
     }

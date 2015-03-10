@@ -35,7 +35,7 @@
         "type": "qc_sample"
     }, 
     "emails": [
-        "test123@me.com"
+        "jlaw@childhooddiseases.org"
     ], 
 	"json_file":"/rawdata/projects/LungBio/pair_001/pair_001.json",
 	"json_type":"sample",

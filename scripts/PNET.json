@@ -36,7 +36,7 @@
         "type": "qc_sample"
     }, 
     "emails": [
-        "test123@me.com"
+		"jlaw@childhooddiseases.org"
     ], 
 	"json_file":"/mnt/Despina/projects/PNET/125/125.json",
 	"json_type":"sample",
