@@ -136,7 +136,8 @@ class Setup_Json:
 		# set the emails
 		for email in self.plugin_settings['email'].split(','):
 			email = email.strip()
-			self.ex_json['emails'].append(email)
+			if re.search("@", email) and email not in self.ex_json['emails']:
+				self.ex_json['emails'].append(email)
 	
 		# check if this is an ffpe sample
 		if 'ffpe' in self.plugin_settings:

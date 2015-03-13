@@ -130,9 +130,15 @@ if __name__ == "__main__":
 			
 			# set the status to 'pending' so that the runs will be QCd together.
 			sampleJsonData['status'] = 'pending'
-
 			# set the 'sample_status' to 'pushed' so that if the sample has already been merged and there is a new run, then the sample will re-QC and merge everything.
 			sampleJsonData['sample_status'] = 'pushed'
+			# set the emails
+			for email in os.environ['PLUGINCONFIG__EMAIL'].split(','):
+				email = email.strip()
+				if re.search("@", email) and email not in sampleJsonData['emails']:
+					sampleJsonData['emails'].append(email)
+			if sampleJsonData['project'] == 'PNET' and 'jkron@childhooddiseases.org' not in sampleJsonData['emails']:
+				sampleJsonData['emails'].append('jkron@childhooddiseases.org')
 			
 			# dump the json file
 			with open(sample_json_plugin_path, 'w') as out:
