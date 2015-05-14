@@ -9,9 +9,14 @@ This plugin takes a sequencing run on an Ion Torrent Proton or PGM and pushes th
 * _report.pdf_ - a pdf of the run report for safekeeping
 * _ionstats_alignment.json_ - contains alignment metrics such as total # of aligned bases
 
-A cron job on the analysis server will then find the runs of each sample pushed to analysis server, and will run QC_sample.py on each sample found (See Protocol “Automated Pipeline” for more information on this automated process). After the QC process is finished, QC_sample.py will then merge the “passing” (see protocol 1.3 “QC_Run” for cutoffs) runs of a sample, generate an excel spreadsheet for that sample, and finally will copy the QC spreadsheet back to the plugin directory of each run (See Running the plugin step 7) and/or send an email if you have it setup.
+The purpose of the QCRunTransfer plugin is automatically QC all the different runs of a sample, and then merge the passing runs. 
+Because the proton and pgm servers must be dedicated to handling the sequencing, the actual QC scripts and analysis must be run on a separate analysis server. 
+This plugin will push and organize a selected run’s bam file along with other JSON files to a specified location on an analysis server. 
+A cron job on the analysis server will then find the runs of each sample pushed to analysis server, and will run QC_sample.py on each sample found (See Protocol “Automated Pipeline” for more information on this automated process). 
+After the QC process is finished, QC_sample.py will then merge the “passing” (see protocol 1.3 “QC_Run” for cutoffs) runs of a sample, generate an excel spreadsheet for that sample, and finally will copy the QC spreadsheet back to the plugin directory of each run (See Running the plugin step 7) and/or send an email if you have it setup.
 TODO - sending an email
 
+![](pluginMedia/img/1.png)
 
 ## Installing the Plugin
 1. SSH into your Proton's or PGM's server and run the following command:
@@ -48,9 +53,7 @@ Because the proton and pgm servers must be dedicated to handling the sequencing,
 This plugin will push and organize a selected run’s bam file along with other JSON files to a specified location on an analysis server. 
 A cron job on the analysis server will then find the runs of each sample pushed to analysis server, and will run QC_sample.py on each sample found (See Protocol “Automated Pipeline” for more information on this automated process). 
 After the QC process is finished, QC_sample.py will then merge the “passing” (see protocol 1.3 “QC_Run” for cutoffs) runs of a sample, generate an excel spreadsheet for that sample, and finally will copy the QC spreadsheet back to the plugin directory of each run. 
-Figure 1 gives an outline of the process.
 
-![](pluginMedia/img/1.png)
 
 1. Connect to the proton or PGM from a web browser (safari,
 chrome, etc.) by typing the server’s IP address into the browser and
