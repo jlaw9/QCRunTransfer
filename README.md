@@ -9,6 +9,9 @@ This plugin takes a sequencing run on an Ion Torrent Proton or PGM and pushes th
 * _report.pdf_ - a pdf of the run report for safekeeping
 * _ionstats_alignment.json_ - contains alignment metrics such as total # of aligned bases
 
+> To push multiple runs at once, another version of these plugin scripts are available that accept a CSV as input.
+> Every run listed in the CSV is pushed to another server in the same way the plugin pushes the files.
+
 The purpose of the QCRunTransfer plugin is automatically QC all the different runs of a sample, and then merge the passing runs. 
 Because the proton and pgm servers must be dedicated to handling the sequencing, the actual QC scripts and analysis must be run on a separate analysis server. 
 This plugin will push and organize a selected run’s bam file along with other JSON files to a specified location on an analysis server. 
