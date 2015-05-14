@@ -1,0 +1,43 @@
+{
+    "analysis": {
+        "settings": {
+			"beg_bed":"/rawdata/support_files/BED/Wales/Wales_minus10.bed",
+			"capture_type":"AmpliSeq",
+            "cleanup": false, 
+      		"chromosomes_to_analyze": ["all"], 
+			"cutoffs": {
+				"error_rate": 2.0e-4,
+				"exp_median_read_length": 105, 
+				"perc_exp_median_read_length": 0.75, 
+				"begin_end_amp_cov": 0.5,
+				"run_amp_cov": 0.5,
+				"merged_amp_cov": 0.9
+			},
+			"end_bed":"/rawdata/support_files/BED/Wales/Wales_plus10.bed",
+            "hom_cutoff": ".8", 
+			"mark_dups": false,
+            "min_amplicon_coverage": "30", 
+            "min_base_coverage": "30", 
+            "pool_dropout": false, 
+            "priority": "1",
+			"project_bed":"/rawdata/support_files/BED/Wales/IAD000004_Amplicons.bed",
+			"qc_merged_bed":"/rawdata/support_files/BED/Wales/Merged/IAD000004_Amplicons_mergedDetail.bed",
+			"qc_unmerged_bed":"/rawdata/support_files/BED/Wales/Unmerged/IAD000004_Amplicons_unmergedDetail.bed",
+            "queue": "all.q", 
+			"tvc_json":"/rawdata/support_files/parameter_sets/germline_high_stringency_pgm_0coverage.json",
+            "type": "germline",
+            "wt_cutoff": ".2"
+        }, 
+        "type": "qc_sample"
+    }, 
+	"emails":[
+		"test@email.com"
+	],
+	"json_type":"sample",
+	"qc_scripts":"/rawdata/scripts/QC_coverage_analysis",
+	"project":"GERMLINE_PGM_PROJECT",
+	"runs":[],
+	"sample_status":"pushed",
+	"sample_type":"germline",
+	"status":"pending"
+}

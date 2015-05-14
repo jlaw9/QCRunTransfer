@@ -5,7 +5,7 @@
 			"capture_type":"AmpliSeq",
             "cleanup": true, 
       		"chromosomes_to_analyze": ["chr1"], 
-      		"chromosomes_to_analyze_merged": ["all", "718"], 
+      		"chromosomes_to_analyze_merged": ["all"], 
 			"cutoffs": {
 				"error_rate": 3.0e-5,
 				"exp_median_read_length": 196, 
@@ -37,17 +37,11 @@
         "type": "qc_sample"
     }, 
     "emails": [
-		"jlaw@childhooddiseases.org",
-		"jkron@childhooddiseases.org"
+		"test@email.com"
     ], 
-	"json_file":"/mnt/Despina/projects/PNET/125/125.json",
 	"json_type":"sample",
-	"qc_folder":"/mnt/Despina/projects/PNET/125/QC",
-	"output_folder":"/mnt/Despina/projects/PNET/125",
-	"project":"PNET",
+	"project":"TUMOR_NORMAL_PROJECT",
 	"runs":[],
-	"sample_name":"125",
-	"sample_folder":"/mnt/Despina/projects/PNET/125",
 	"sample_status":"pushed",
 	"sample_type":"tumor_normal",
 	"status":"pending"
