@@ -21,7 +21,9 @@ TODO - sending an email
 
 ![](pluginMedia/img/1.png)
 
+
 ## Installing the Plugin
+
 1. SSH into your Proton's or PGM's server and run the following command:
 
 		git clone "https://github.com/jlaw9/QCRunTransfer.git" /results/plugins/QCRunTransfer
@@ -77,7 +79,7 @@ it must be run separately.
 
 1. Select the plugin “QCRunTransfer.” If you do not see it,
 then the plugin has not yet been loaded onto your current server. See
-[Installing the Plugin](#Installing_the_Plugin) for instructions on how to download the
+[Installing the Plugin](#installing-the-plugin) for instructions on how to download the
 plugin.
 
 	![](pluginMedia/img/4.png)
