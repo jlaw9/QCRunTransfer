@@ -12,11 +12,11 @@ This plugin takes a sequencing run on an Ion Torrent Proton or PGM and pushes th
 > To push multiple runs at once, another [version of these plugin scripts](https://github.com/jlaw9/TRI_Dev/tree/master/Push) are available that accept a CSV as input.
 > Every run listed in the CSV is pushed to another server in the same way the plugin pushes the files.
 
-The purpose of the QCRunTransfer plugin is automatically QC all the different runs of a sample, and then merge the passing runs. 
+The purpose of the QCRunTransfer plugin is automatically QC all the different runs of a sample (See [QC Scripts](https://github.com/jlaw9/TRI_Scripts/wiki), and then merge the passing runs (See [QC Scripts](https://github.com/jlaw9/TRI_Scripts/wiki/1_5_Merge_Runs). 
 Because the proton and pgm servers must be dedicated to handling the sequencing, the actual QC scripts and analysis must be run on a separate analysis server. 
 This plugin will push and organize a selected run’s bam file along with other JSON files to a specified location on an analysis server. 
-A cron job on the analysis server will then find the runs of each sample pushed to analysis server, and will run QC_sample.py on each sample found (See Protocol “Automated Pipeline” for more information on this automated process). 
-After the QC process is finished, QC_sample.py will then merge the “passing” (see protocol 1.3 “QC_Run” for cutoffs) runs of a sample, generate an excel spreadsheet for that sample, and finally will copy the QC spreadsheet back to the plugin directory of each run (See Running the plugin step 7) and/or send an email if you have it setup.
+A cron job on the analysis server will then find the runs of each sample pushed to analysis server, and will run [QC_sample.py](https://github.com/jlaw9/TRI_Scripts/blob/master/QC/QC_sample.py) on each sample found (See [Automated Pipeline](https://github.com/jlaw9/TRI_Scripts/wiki/Automated_Scripts) for more information on this automated process). 
+After the QC process is finished, QC_sample.py will then merge the “passing” (see [QC_Run](https://github.com/jlaw9/TRI_Scripts/wiki/1.3-QC-Run) for cutoffs) runs of a sample, generate an excel spreadsheet for that sample, and finally will copy the QC spreadsheet back to the plugin directory of each run and/or send an email if you have it setup.
 TODO - sending an email
 
 ![](pluginMedia/img/1.png)
@@ -50,6 +50,7 @@ Replace the value of "option value=XXXX" on line 133 with the name of your proje
 	```
 
 	To add multiple projects, simply copy and paste the ```<option value="PROJECT">Project</option>``` section and repeat steps 3 and 4.
+
 
 ##Running the Plugin
 
