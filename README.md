@@ -60,8 +60,7 @@ After the QC process is finished, QC_sample.py will then merge the “passing”
 
 1. Connect to the proton or PGM from a web browser (safari,
 chrome, etc.) by typing the server’s IP address into the browser and
-login (See [Appendix I](#AppendixI) of Protocol 1.0 for login and
-connection help).
+login.
 
 1. Select a sequencing run found on the “Data” tab, then
 “Completed Runs & Results” sub-tab.
@@ -78,7 +77,7 @@ it must be run separately.
 
 1. Select the plugin “QCRunTransfer.” If you do not see it,
 then the plugin has not yet been loaded onto your current server. See
-[Appendix I](#Appendix_I) for instructions on how to download the
+[Installing the Plugin](#Installing_the_Plugin) for instructions on how to download the
 plugin.
 
 	![](pluginMedia/img/4.png)
