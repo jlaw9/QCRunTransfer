@@ -1,5 +1,7 @@
 # QCRunTransfer Ion Torrent Plugin
 
+Jeff Law - jlaw@childhooddiseases.org - 05/25/2015
+
 TODO Table of Contents
 
 ## Goal
