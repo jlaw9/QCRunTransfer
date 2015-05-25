@@ -22,7 +22,7 @@ See the [Germline](https://github.com/jlaw9/TRI_Scripts/wiki/1.1-Organize-Sequen
 > To push archived runs and/or multiple runs at once, another [version of these plugin scripts](https://github.com/jlaw9/TRI_Dev/tree/master/Push) are available that accept a CSV as input.
 > Every run listed in the CSV is pushed to another server in the same way the plugin pushes the files.
 
-Because the proton and pgm servers must be dedicated to handling the sequencing, the actual QC scripts and analysis must be run on a separate analysis server. A cron job on the analysis server will find the runs of each sample pushed to analysis server, and will run [QC_sample.py](https://github.com/jlaw9/TRI_Scripts/blob/master/QC/QC_sample.py) on each sample found.
+Because the proton and pgm servers must be dedicated to handling the sequencing, the actual QC scripts and analysis must be run on a separate analysis server. A [cron job](https://github.com/jlaw9/TRI_Dev/wiki/Setting-up-the-Server#cron-jobs) on the analysis server will find the runs of each sample pushed to analysis server, and will run [QC_sample.py](https://github.com/jlaw9/TRI_Scripts/blob/master/QC/QC_sample.py) on each sample found.
 
 > See [Automated Pipeline](https://github.com/jlaw9/TRI_Scripts/wiki/Automated_Scripts) for more information on this automated process and [Cron Jobs](https://github.com/jlaw9/TRI_Dev/wiki/Setting-up-the-Server#cron-jobs) for instructions on how to set up cron on the analysis server. 
 
