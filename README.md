@@ -1,5 +1,7 @@
 # QCRunTransfer Ion Torrent Plugin
 
+TODO Table of Contents
+
 ## Goal
 Push and organize a selected run’s bam file along with JSON files, which contain settings for the [QC Scripts](https://github.com/jlaw9/TRI_Scripts/wiki) to be run, to a specified location on an analysis server. 
 
@@ -43,20 +45,20 @@ After the QC process is finished, QC_sample.py will then merge the “passing”
 
 	QCRunTransfer should now be accessible as a plugin to run from a run report.
 
-1. Create your project's JSON settings file. This sample JSON file will contain the settings for running the [QC_Scripts](). This file should go in the "scripts" directory of the plugin.
+1. Create your project's JSON settings file. This sample JSON file will contain the settings for running the [QC_Scripts](https://github.com/jlaw9/TRI_Scripts/tree/master/QC). This file should go in the "scripts" directory of the plugin.
 
 	TODO
 	> Table
 
 1. Add the new project option to the _instance.html_ file. 
 Replace the value of "option value=XXXX" on line 133 with the name of your project. 
-**value= needs to match the title of the JSON file created in step 3.** For example: a Cancer Exome project coule have a json named _Cancer.json_ and an option of ```html<option value="Cancer">Cancer Exomes</option>```.
+**value= needs to match the title of the JSON file created in step 3.** For example: a Cancer Exome project coule have a json named _Cancer.json_ and an option of `html<option value="Cancer">Cancer Exomes</option>`.
 
 	```html
 	133 <tr><td align=right>Project: </td><td align=left><select name="project"><option value="TUMOR_NORMAL_PROJECT">Tumor Normal Project</option><option value="GERMLINE_PGM_PROJECT">Germline PGM Project</option></select></tr>
 	```
 
-	To add multiple projects, simply copy and paste the ```<option value="PROJECT">Project</option>``` section and repeat steps 3 and 4.
+	To add multiple projects, simply copy and paste the `<option value="PROJECT">Project</option>` section and repeat steps 3 and 4.
 
 
 ##Running the Plugin
@@ -96,14 +98,10 @@ plugin.
 
 	![](pluginMedia/img/5.png)
 
-	TODO
-	- If your project is not found, then the project JSON file has not yet
-been made. I plan to add settings later on to set a project’s settings,
-but for now, I (or your local bioinformatician) will have to handle
-that.
+	
+> If your project is not found, then the project JSON file has not yet been made. I plan to add an option to the QC Plugin later on to set a project’s settings. For now, see the [Adding a new project](https://github.com/jlaw9/TRI_Dev/wiki/Adding-a-Project#adding-a-new-project) documentation.
 
-	TODO
-	- The server can send an email when the job is finished if ssmtp is setup.
+> The server can send an email when the job is finished if ssmtp is setup (see [Automated Emails](https://github.com/jlaw9/TRI_Dev/wiki/Setting-up-the-Server#automated-emails).
 
 
 1. Understand the plugin output. See 6i and 6ii for screenshots and descriptions of the output.
@@ -118,6 +116,8 @@ that.
 	Otherwise contact me or your local bioinformatician ☺
 
 		![](pluginMedia/img/6B.png)
+	
+	1. TODO Most probable errors and how to fix them.
 
 1. Retrieve the output files. The *QC\_sample.py* script
 running on the analysis server will copy the output excel file and log
