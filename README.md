@@ -101,9 +101,9 @@ plugin.
 	![](pluginMedia/img/5.png)
 
 	
-> If your project is not found, then the project JSON file has not yet been made. I plan to add an option to the QC Plugin later on to set a project’s settings. For now, see the [Adding a new project](https://github.com/jlaw9/TRI_Dev/wiki/Adding-a-Project#adding-a-new-project) documentation.
+		> If your project is not found, then the project JSON file has not yet been made. I plan to add an option to the QC Plugin later on to set a project’s settings. For now, see the [Adding a new project](https://github.com/jlaw9/TRI_Dev/wiki/Adding-a-Project#adding-a-new-project) documentation.
 
-> The server can send an email when the job is finished if ssmtp is setup (see [Automated Emails](https://github.com/jlaw9/TRI_Dev/wiki/Setting-up-the-Server#automated-emails).
+		> The server can send an email when the job is finished if ssmtp is setup (see [Automated Emails](https://github.com/jlaw9/TRI_Dev/wiki/Setting-up-the-Server#automated-emails).
 
 
 1. Understand the plugin output. See 6i and 6ii for screenshots and descriptions of the output.
