@@ -63,7 +63,7 @@ Replace the value of "option value=XXXX" on line 133 with the name of your proje
 	To add multiple projects, simply copy and paste the `<option value="PROJECT">Project</option>` section and repeat steps 3 and 4.
 
 
-##Running the Plugin
+## Running the Plugin
 
 Plugin Overview: The purpose of the QCRunTransfer plugin is automatically QC all the different runs of a sample, and then merge the passing runs. 
 Because the proton and pgm servers must be dedicated to handling the sequencing, the actual QC scripts and analysis must be run on a separate analysis server. 
@@ -145,3 +145,11 @@ method to retrieve the output files:
 	1) After each run is QC’d with each other and 2) after the runs are merged and those merged files are QC’d.
 
 		![](pluginMedia/img/7D.png)
+
+## Understanding the Output
+
+TODO
+
+## Troubleshoot Errors
+
+TODO
